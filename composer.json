@@ -1,5 +1,5 @@
 {
-    "name": "waziri123/livewire-toast",
+    "name": "waziri123/waziri-livewire-toast",
     "description": "Livewire Package to display Toast Notifications",
     "license": "MIT",
     "keywords": ["Laravel", "LivewireToast", "Toast", "Notifications", "Livewire"],
