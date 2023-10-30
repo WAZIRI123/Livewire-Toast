@@ -1,6 +1,28 @@
 {
+    "name": "Waziri123/livewire-toast",
+    "description": "Livewire Package to display Toast Notifications",
+    "license": "MIT",
+    "keywords": ["Laravel", "LivewireToast", "Toast", "Notifications", "Livewire"],
+    "authors": [
+        {
+            "name": "Waziri123ares",
+            "email": "support@Waziri123ares.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Waziri123\\LivewireToast\\" : "src/"
+        }
+    },
     "require": {
         "orchestra/testbench": "^8.14",
         "livewire/livewire": "^3.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Waziri123\\LivewireToast\\LivewireToastServiceProvider"
+            ]
+        }
     }
 }
