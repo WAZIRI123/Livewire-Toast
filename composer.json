@@ -1,0 +1,6 @@
+{
+    "require": {
+        "orchestra/testbench": "^8.14",
+        "livewire/livewire": "^3.0"
+    }
+}
