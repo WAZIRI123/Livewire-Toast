@@ -1,12 +1,12 @@
 {
-    "name": "Waziri123/livewire-toast",
+    "name": "waziri123/livewire-toast",
     "description": "Livewire Package to display Toast Notifications",
     "license": "MIT",
     "keywords": ["Laravel", "LivewireToast", "Toast", "Notifications", "Livewire"],
     "authors": [
         {
-            "name": "Waziri123ares",
-            "email": "support@Waziri123ares.com"
+            "name": "Waziri123",
+            "email": "Waziriallyamiri123@gmail.com"
         }
     ],
     "autoload": {
