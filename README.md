@@ -98,7 +98,7 @@ Your messages don't get styles while using TailwindCss? Please publish your view
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ## Credits
--[Waziri123](http://www.ascsoftwares.com)
+- [Waziri123](http://www.ascsoftwares.com)
 - [AscSoftwares](http://www.ascsoftwares.com)
 
 ## License
