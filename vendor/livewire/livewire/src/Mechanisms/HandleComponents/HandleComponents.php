@@ -3,13 +3,15 @@
 namespace Livewire\Mechanisms\HandleComponents;
 
 use function Livewire\{ invade, store, trigger, wrap };
+use ReflectionUnionType;
+use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
-use ReflectionUnionType;
 
-class HandleComponents
+class HandleComponents extends Mechanism
 {
     protected $propertySynthesizers = [
         Synthesizers\CarbonSynth::class,
@@ -19,20 +21,11 @@ class HandleComponents
         Synthesizers\StdClassSynth::class,
         Synthesizers\ArraySynth::class,
         Synthesizers\IntSynth::class,
+        Synthesizers\FloatSynth::class
     ];
 
     public static $renderStack = [];
     public static $componentStack = [];
-
-    public function register()
-    {
-        app()->singleton($this::class);
-    }
-
-    public function boot()
-    {
-        //
-    }
 
     public function registerPropertySynthesizer($synth)
     {
@@ -211,6 +204,11 @@ class HandleComponents
 
         [$value, $meta] = $tuple;
 
+        // Nested properties get set as `__rm__` when they are removed. We don't want to hydrate these.
+        if ($this->isRemoval($value) && str($path)->contains('.')) {
+            return $value;
+        }
+
         $synth = $this->propertySynth($meta['s'], $context, $path);
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
@@ -237,8 +235,6 @@ class HandleComponents
 
             $revertA = Utils::shareWithViews('__livewire', $component);
             $revertB = Utils::shareWithViews('_instance', $component); // @deprecated
-
-            $slots = $pushes = $prepends = $sections = null;
 
             $viewContext = new ViewContext;
 
@@ -293,10 +289,19 @@ class HandleComponents
 
     protected function updateProperties($component, $updates, $data, $context)
     {
+        $finishes = [];
+
         foreach ($updates as $path => $value) {
             $value = $this->hydrateForUpdate($data, $path, $value, $context);
 
-            $this->updateProperty($component, $path, $value, $context);
+            // We only want to run "updated" hooks after all properties have
+            // been updated so that each individual hook has the ability
+            // to overwrite the updated states of other properties...
+            $finishes[] = $this->updateProperty($component, $path, $value, $context);
+        }
+
+        foreach ($finishes as $finish) {
+            $finish();
         }
     }
 
@@ -308,10 +313,15 @@ class HandleComponents
 
         $finish = trigger('update', $component, $path, $value);
 
+        // Ensure that it's a public property, not on the base class first...
+        if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))) {
+            throw new PublicPropertyNotFoundException($property, $component->getName());
+        }
+
         // If this isn't a "deep" set, set it directly, otherwise we have to
         // recursively get up and set down the value through the synths...
         if (empty($segments)) {
-            if ($value !== '__rm__') $this->setComponentPropertyAwareOfTypes($component, $property, $value);
+            $this->setComponentPropertyAwareOfTypes($component, $property, $value);
         } else {
             $propertyValue = $component->$property;
 
@@ -320,13 +330,12 @@ class HandleComponents
             );
         }
 
-        $finish();
+        return $finish;
     }
 
     protected function hydrateForUpdate($raw, $path, $value, $context)
     {
         $meta = $this->getMetaForPath($raw, $path);
-        $component = $context->component;
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
@@ -399,7 +408,7 @@ class HandleComponents
             $toSet = $this->recursivelySetValue($baseProperty, $propertyTarget, $leafValue, $segments, $index + 1, $context);
         }
 
-        $method = ($leafValue === '__rm__' && $isLastSegment) ? 'unset' : 'set';
+        $method = ($this->isRemoval($leafValue) && $isLastSegment) ? 'unset' : 'set';
 
         $pathThusFar = collect([$baseProperty, ...$segments])->slice(0, $index + 1)->join('.');
         $fullPath = collect([$baseProperty, ...$segments])->join('.');
@@ -519,5 +528,9 @@ class HandleComponents
     protected function popOffComponentStack()
     {
         array_pop($this::$componentStack);
+    }
+
+    protected function isRemoval($value) {
+        return $value === '__rm__';
     }
 }

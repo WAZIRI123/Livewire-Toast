@@ -11,6 +11,7 @@ class ParallelRunner extends \Illuminate\Testing\ParallelRunner
      *
      * @return \Illuminate\Contracts\Foundation\Application
      */
+    #[\Override]
     protected function createApplication()
     {
         if (! \defined('TESTBENCH_WORKING_PATH')) {
@@ -21,9 +22,7 @@ class ParallelRunner extends \Illuminate\Testing\ParallelRunner
             $_ENV['TESTBENCH_APP_BASE_PATH'] = Env::get('TESTBENCH_APP_BASE_PATH');
         }
 
-        $applicationResolver = static::$applicationResolver ?: static function () {
-            return container()->createApplication();
-        };
+        $applicationResolver = static::$applicationResolver ?: static fn () => container()->createApplication();
 
         return $applicationResolver();
     }

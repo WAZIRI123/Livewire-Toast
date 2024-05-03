@@ -8,6 +8,8 @@ use Orchestra\Canvas\Core\Concerns\ResolvesPresetStubs;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 
+use function Illuminate\Filesystem\join_paths;
+
 #[AsCommand(name: 'preset', description: 'Create canvas.yaml for the project')]
 class PresetMakeCommand extends GeneratorCommand
 {
@@ -29,7 +31,7 @@ class PresetMakeCommand extends GeneratorCommand
     {
         $name = Str::lower($this->getNameInput());
 
-        $stub = __DIR__.'/stubs/preset';
+        $stub = join_paths(__DIR__, 'stubs', 'preset');
 
         return $this->files->exists("{$stub}.{$name}.stub")
             ? "{$stub}.{$name}.stub"
@@ -42,14 +44,16 @@ class PresetMakeCommand extends GeneratorCommand
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function getPath($name)
     {
-        return $this->generatorPreset()->basePath().'/canvas.yaml';
+        return join_paths($this->generatorPreset()->basePath(), 'canvas.yaml');
     }
 
     /**
      * Get the root namespace for the class.
      */
+    #[\Override]
     protected function rootNamespace(): string
     {
         $namespace = transform($this->option('namespace'), function (string $namespace) {
@@ -74,6 +78,7 @@ class PresetMakeCommand extends GeneratorCommand
      *
      * @return array<int, array>
      */
+    #[\Override]
     protected function getOptions()
     {
         return [

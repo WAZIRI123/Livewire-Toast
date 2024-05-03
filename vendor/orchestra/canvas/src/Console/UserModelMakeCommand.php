@@ -7,6 +7,8 @@ use Orchestra\Canvas\Core\Concerns\ResolvesPresetStubs;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 
+use function Illuminate\Filesystem\join_paths;
+
 #[AsCommand(name: 'make:user-model', description: 'Create the User model class')]
 class UserModelMakeCommand extends GeneratorCommand
 {
@@ -26,7 +28,7 @@ class UserModelMakeCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/user-model.stub');
+        return $this->resolveStubPath(join_paths('stubs', 'user-model.stub'));
     }
 
     /**
@@ -37,12 +39,13 @@ class UserModelMakeCommand extends GeneratorCommand
      */
     protected function resolveDefaultStubPath($stub)
     {
-        return __DIR__.$stub;
+        return join_paths(__DIR__, $stub);
     }
 
     /**
      * Get the default namespace for the class.
      */
+    #[\Override]
     public function getDefaultNamespace($rootNamespace)
     {
         return rtrim($this->generatorPreset()->modelNamespace(), '\\');
@@ -53,6 +56,7 @@ class UserModelMakeCommand extends GeneratorCommand
      *
      * @return string
      */
+    #[\Override]
     protected function getNameInput()
     {
         return 'User';
@@ -63,6 +67,7 @@ class UserModelMakeCommand extends GeneratorCommand
      *
      * @return array
      */
+    #[\Override]
     protected function getArguments()
     {
         return [];
@@ -73,6 +78,7 @@ class UserModelMakeCommand extends GeneratorCommand
      *
      * @return array<int, array>
      */
+    #[\Override]
     protected function getOptions()
     {
         return [

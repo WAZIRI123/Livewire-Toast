@@ -3,23 +3,23 @@
 namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 
+use Livewire\Mechanisms\Mechanism;
 use function Livewire\trigger;
 
-class HandleRequests
+class HandleRequests extends Mechanism
 {
     protected $updateRoute;
 
-    function register()
-    {
-        app()->singleton($this::class);
-    }
-
     function boot()
     {
-        app($this::class)->setUpdateRoute(function ($handle) {
-            return Route::post('/livewire/update', $handle)->middleware('web');
-        });
+        // Only set it if another provider hasn't already set it....
+        if (! $this->updateRoute) {
+            app($this::class)->setUpdateRoute(function ($handle) {
+                return Route::post('/livewire/update', $handle)->middleware('web');
+            });
+        }
 
         $this->skipRequestPayloadTamperingMiddleware();
     }
@@ -77,29 +77,34 @@ class HandleRequests
 
     function handleUpdate()
     {
-        $components = request('components');
+        $requestPayload = request('components');
 
-        $responses = [];
+        $finish = trigger('request', $requestPayload);
 
-        foreach ($components as $component) {
-            $snapshot = json_decode($component['snapshot'], associative: true);
-            $updates = $component['updates'];
-            $calls = $component['calls'];
+        $requestPayload = $finish($requestPayload);
+
+        $componentResponses = [];
+
+        foreach ($requestPayload as $componentPayload) {
+            $snapshot = json_decode($componentPayload['snapshot'], associative: true);
+            $updates = $componentPayload['updates'];
+            $calls = $componentPayload['calls'];
 
             [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
 
-            $responses[] = [
+            $componentResponses[] = [
                 'snapshot' => json_encode($snapshot),
                 'effects' => $effects,
             ];
         }
 
-        $response = [
-            'components' => $responses,
+        $responsePayload = [
+            'components' => $componentResponses,
+            'assets' => SupportScriptsAndAssets::getAssets(),
         ];
 
-        $finish = trigger('profile.response', $response);
+        $finish = trigger('response', $responsePayload);
 
-        return $finish($response);
+        return $finish($responsePayload);
     }
 }

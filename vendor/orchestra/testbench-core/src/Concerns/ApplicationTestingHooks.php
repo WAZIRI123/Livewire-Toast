@@ -5,18 +5,19 @@ namespace Orchestra\Testbench\Concerns;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Closure;
-use Illuminate\Console\Application as Artisan;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Bootstrap\HandleExceptions;
-use Illuminate\Queue\Queue;
 use Illuminate\Support\Facades\ParallelTesting;
-use Illuminate\View\Component;
 use Mockery;
+use Orchestra\Testbench\Foundation\Application as Testbench;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 use Throwable;
 
 trait ApplicationTestingHooks
 {
+    use InteractsWithPest;
+    use InteractsWithPHPUnit;
+    use InteractsWithTestCase;
+
     /**
      * The Illuminate application instance.
      *
@@ -53,6 +54,13 @@ trait ApplicationTestingHooks
     protected $callbackException;
 
     /**
+     * Indicates if we have made it through the base setUp function.
+     *
+     * @var bool
+     */
+    protected $setUpHasRun = false;
+
+    /**
      * Setup the testing hooks.
      *
      * @param  (\Closure():(void))|null  $callback
@@ -63,8 +71,12 @@ trait ApplicationTestingHooks
         if (! $this->app) {
             $this->refreshApplication();
 
+            $this->setUpTheTestEnvironmentUsingTestCase();
+
             $this->setUpParallelTestingCallbacks();
         }
+
+        $this->setUpHasRun = true;
 
         /** @var \Illuminate\Foundation\Application $app */
         $app = $this->app;
@@ -93,12 +105,16 @@ trait ApplicationTestingHooks
         if ($this->app) {
             $this->callBeforeApplicationDestroyedCallbacks();
 
+            $this->tearDownTheTestEnvironmentUsingTestCase();
+
             $this->tearDownParallelTestingCallbacks();
 
             $this->app?->flush();
 
             $this->app = null;
         }
+
+        $this->setUpHasRun = false;
 
         if (! \is_null($callback)) {
             \call_user_func($callback);
@@ -121,12 +137,7 @@ trait ApplicationTestingHooks
         $this->afterApplicationCreatedCallbacks = [];
         $this->beforeApplicationDestroyedCallbacks = [];
 
-        Artisan::forgetBootstrappers();
-        Component::flushCache();
-        Component::forgetComponentsResolver();
-        Component::forgetFactory();
-        Queue::createPayloadUsing(null);
-        HandleExceptions::forgetApp();
+        Testbench::flushState();
 
         if ($this->callbackException) {
             throw $this->callbackException;
@@ -138,9 +149,8 @@ trait ApplicationTestingHooks
      */
     protected function setUpParallelTestingCallbacks(): void
     {
-        if (class_exists(ParallelTesting::class) && $this instanceof PHPUnitTestCase) {
-            /** @phpstan-ignore-next-line */
-            ParallelTesting::callSetUpTestCaseCallbacks($this);
+        if ($this instanceof PHPUnitTestCase) {
+            ParallelTesting::callSetUpTestCaseCallbacks($this); // @phpstan-ignore-line
         }
     }
 
@@ -149,9 +159,8 @@ trait ApplicationTestingHooks
      */
     protected function tearDownParallelTestingCallbacks(): void
     {
-        if (class_exists(ParallelTesting::class) && $this instanceof PHPUnitTestCase) {
-            /** @phpstan-ignore-next-line */
-            ParallelTesting::callTearDownTestCaseCallbacks($this);
+        if ($this instanceof PHPUnitTestCase) {
+            ParallelTesting::callTearDownTestCaseCallbacks($this); // @phpstan-ignore-line
         }
     }
 
@@ -161,7 +170,7 @@ trait ApplicationTestingHooks
      * @param  callable():void  $callback
      * @return void
      */
-    protected function afterApplicationRefreshed(callable $callback): void
+    public function afterApplicationRefreshed(callable $callback): void
     {
         $this->afterApplicationRefreshedCallbacks[] = $callback;
 
@@ -188,7 +197,7 @@ trait ApplicationTestingHooks
      * @param  callable():void  $callback
      * @return void
      */
-    protected function afterApplicationCreated(callable $callback): void
+    public function afterApplicationCreated(callable $callback): void
     {
         $this->afterApplicationCreatedCallbacks[] = $callback;
 
@@ -215,7 +224,7 @@ trait ApplicationTestingHooks
      * @param  callable():void  $callback
      * @return void
      */
-    protected function beforeApplicationDestroyed(callable $callback): void
+    public function beforeApplicationDestroyed(callable $callback): void
     {
         array_unshift($this->beforeApplicationDestroyedCallbacks, $callback);
     }

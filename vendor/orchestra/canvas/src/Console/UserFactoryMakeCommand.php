@@ -7,6 +7,8 @@ use Orchestra\Canvas\Core\Concerns\ResolvesPresetStubs;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 
+use function Illuminate\Filesystem\join_paths;
+
 #[AsCommand(name: 'make:user-factory', description: 'Create the User factory class')]
 class UserFactoryMakeCommand extends GeneratorCommand
 {
@@ -26,7 +28,7 @@ class UserFactoryMakeCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/user-factory.stub');
+        return $this->resolveStubPath(join_paths('stubs', 'user-factory.stub'));
     }
 
     /**
@@ -37,7 +39,7 @@ class UserFactoryMakeCommand extends GeneratorCommand
      */
     protected function resolveDefaultStubPath($stub)
     {
-        return __DIR__.$stub;
+        return join_paths(__DIR__, $stub);
     }
 
     /**
@@ -45,6 +47,7 @@ class UserFactoryMakeCommand extends GeneratorCommand
      *
      * @return string
      */
+    #[\Override]
     protected function rootNamespace()
     {
         return $this->generatorPreset()->factoryNamespace();
@@ -81,6 +84,7 @@ class UserFactoryMakeCommand extends GeneratorCommand
      *
      * @return string
      */
+    #[\Override]
     protected function getNameInput()
     {
         return 'UserFactory';
@@ -91,6 +95,7 @@ class UserFactoryMakeCommand extends GeneratorCommand
      *
      * @return array
      */
+    #[\Override]
     protected function getArguments()
     {
         return [];
@@ -101,6 +106,7 @@ class UserFactoryMakeCommand extends GeneratorCommand
      *
      * @return array<int, array>
      */
+    #[\Override]
     protected function getOptions()
     {
         return [

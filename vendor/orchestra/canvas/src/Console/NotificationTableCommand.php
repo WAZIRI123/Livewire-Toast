@@ -8,7 +8,7 @@ use Orchestra\Canvas\Core\Concerns\MigrationGenerator;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/9.x/src/Illuminate/Notifications/Console/NotificationTableCommand.php
+ * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Notifications/Console/NotificationTableCommand.php
  */
 #[AsCommand(name: 'notifications:table', description: 'Create a migration for the notifications table')]
 class NotificationTableCommand extends \Illuminate\Notifications\Console\NotificationTableCommand
@@ -35,6 +35,7 @@ class NotificationTableCommand extends \Illuminate\Notifications\Console\Notific
      * @param  string  $table
      * @return string
      */
+    #[\Override]
     protected function createBaseMigration($table)
     {
         return $this->createBaseMigrationUsingCanvas($table);
@@ -46,6 +47,7 @@ class NotificationTableCommand extends \Illuminate\Notifications\Console\Notific
      * @param  string  $table
      * @return bool
      */
+    #[\Override]
     protected function migrationExists($table)
     {
         return $this->migrationExistsUsingCanvas($table);

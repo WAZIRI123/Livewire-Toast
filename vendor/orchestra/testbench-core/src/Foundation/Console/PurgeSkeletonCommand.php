@@ -9,6 +9,8 @@ use Illuminate\Support\LazyCollection;
 use Orchestra\Testbench\Contracts\Config as ConfigContract;
 use Symfony\Component\Console\Attribute\AsCommand;
 
+use function Illuminate\Filesystem\join_paths;
+
 #[AsCommand(name: 'package:purge-skeleton', description: 'Purge skeleton folder to original state')]
 class PurgeSkeletonCommand extends Command
 {
@@ -51,11 +53,11 @@ class PurgeSkeletonCommand extends Command
             workingPath: $workingPath,
         ))->handle(
             LazyCollection::make(function () use ($filesystem) {
-                yield $this->laravel->basePath('database/database.sqlite');
-                yield $filesystem->glob($this->laravel->basePath('routes/testbench-*.php'));
-                yield $filesystem->glob($this->laravel->basePath('storage/app/public/*'));
-                yield $filesystem->glob($this->laravel->basePath('storage/app/*'));
-                yield $filesystem->glob($this->laravel->basePath('storage/framework/sessions/*'));
+                yield $this->laravel->databasePath('database.sqlite');
+                yield $filesystem->glob($this->laravel->basePath(join_paths('routes', 'testbench-*.php')));
+                yield $filesystem->glob($this->laravel->storagePath(join_paths('app', 'public', '*')));
+                yield $filesystem->glob($this->laravel->storagePath(join_paths('app', '*')));
+                yield $filesystem->glob($this->laravel->storagePath(join_paths('framework', 'sessions', '*')));
             })->flatten()
         );
 
@@ -66,12 +68,9 @@ class PurgeSkeletonCommand extends Command
         ))->handle(
             LazyCollection::make($files)
                 ->map(fn ($file) => $this->laravel->basePath($file))
-                ->map(static function ($file) use ($filesystem) {
-                    return str_contains($file, '*')
-                        ? [...$filesystem->glob($file)]
-                        : $file;
-                })->flatten()
-                ->reject(fn ($file) => str_contains($file, '*'))
+                ->map(static fn ($file) => str_contains($file, '*') ? [...$filesystem->glob($file)] : $file)
+                ->flatten()
+                ->reject(static fn ($file) => str_contains($file, '*'))
         );
 
         (new Actions\DeleteDirectories(
@@ -81,14 +80,9 @@ class PurgeSkeletonCommand extends Command
         ))->handle(
             Collection::make($directories)
                 ->map(fn ($directory) => $this->laravel->basePath($directory))
-                ->map(static function ($directory) use ($filesystem) {
-                    return str_contains($directory, '*')
-                        ? [...$filesystem->glob($directory)]
-                        : $directory;
-                })->flatten()
-                ->reject(static function ($directory) {
-                    return str_contains($directory, '*');
-                })
+                ->map(static fn ($directory) => str_contains($directory, '*') ? [...$filesystem->glob($directory)] : $directory)
+                ->flatten()
+                ->reject(static fn ($directory) => str_contains($directory, '*'))
         );
 
         return Command::SUCCESS;

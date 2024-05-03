@@ -5,6 +5,7 @@ namespace Orchestra\Workbench\Console;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Collection;
+use Orchestra\Workbench\BuildParser;
 use Orchestra\Workbench\Contracts\RecipeManager;
 use Orchestra\Workbench\Workbench;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -24,29 +25,25 @@ class BuildCommand extends Command
     {
         $commands = Collection::make($kernel->all())
             ->keys()
-            ->filter(static function ($command) {
-                return \is_string($command);
-            })->mapWithKeys(static function (string $command) {
-                return [str_replace(':', '-', $command) => $command];
-            });
+            ->filter(static fn ($command) => \is_string($command))
+            ->mapWithKeys(static fn (string $command) => [str_replace(':', '-', $command) => $command]);
 
-        /** @var array<int, string> $build */
+        /** @var array<int|string, array<string, mixed>|string> $build */
         $build = Workbench::config('build');
 
-        Collection::make($build)
-            ->each(function (string $build) use ($kernel, $recipes, $commands) {
-                if ($recipes->hasCommand($build)) {
-                    $recipes->command($build)->handle($kernel, $this->output);
+        BuildParser::make($build)
+            ->each(function (array $options, string $name) use ($kernel, $recipes, $commands) {
+                /** @var array<string, mixed> $options */
+                if ($recipes->hasCommand($name)) {
+                    $recipes->command($name)->handle($kernel, $this->output);
 
                     return;
                 }
 
-                $command = $commands->get($build) ?? $commands->first(static function ($name) use ($build) {
-                    return $build === $name;
-                });
+                $command = $commands->get($name) ?? $commands->first(static fn ($commandName) => $name === $commandName);
 
                 if (! \is_null($command)) {
-                    $recipes->commandUsing($command)->handle($kernel, $this->output);
+                    $recipes->commandUsing($command, $options)->handle($kernel, $this->output);
                 }
             });
 

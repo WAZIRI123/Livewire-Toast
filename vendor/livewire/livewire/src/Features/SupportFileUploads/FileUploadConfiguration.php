@@ -91,9 +91,19 @@ class FileUploadConfiguration
         return $mimeType === 'image/svg' ? 'image/svg+xml' : $mimeType;
     }
 
+    public static function lastModified($filename)
+    {
+        return static::storage()->lastModified($filename);
+    }
+
     public static function middleware()
     {
         return config('livewire.temporary_file_upload.middleware') ?: 'throttle:60,1';
+    }
+
+    public static function shouldCleanupOldUploads()
+    {
+        return config('livewire.temporary_file_upload.cleanup', true);
     }
 
     public static function rules()

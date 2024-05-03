@@ -8,7 +8,7 @@ use Orchestra\Canvas\Core\Concerns\UsesGeneratorOverrides;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/9.x/src/Illuminate/Foundation/Console/EventMakeCommand.php
+ * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Foundation/Console/EventMakeCommand.php
  */
 #[AsCommand(name: 'make:event', description: 'Create a new event class')]
 class EventMakeCommand extends \Illuminate\Foundation\Console\EventMakeCommand
@@ -35,6 +35,7 @@ class EventMakeCommand extends \Illuminate\Foundation\Console\EventMakeCommand
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
+    #[\Override]
     public function handle()
     {
         return $this->generateCode() ? self::SUCCESS : self::FAILURE;
@@ -46,6 +47,7 @@ class EventMakeCommand extends \Illuminate\Foundation\Console\EventMakeCommand
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function getPath($name)
     {
         return $this->getPathUsingCanvas($name);
@@ -56,6 +58,7 @@ class EventMakeCommand extends \Illuminate\Foundation\Console\EventMakeCommand
      *
      * @return string
      */
+    #[\Override]
     protected function rootNamespace()
     {
         return $this->rootNamespaceUsingCanvas();

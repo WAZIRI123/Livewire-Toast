@@ -8,7 +8,7 @@ use Orchestra\Canvas\Core\Concerns\UsesGeneratorOverrides;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/9.x/src/Illuminate/Foundation/Console/RequestMakeCommand.php
+ * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Foundation/Console/RequestMakeCommand.php
  */
 #[AsCommand(name: 'make:request', description: 'Create a new form request class')]
 class RequestMakeCommand extends \Illuminate\Foundation\Console\RequestMakeCommand
@@ -35,6 +35,7 @@ class RequestMakeCommand extends \Illuminate\Foundation\Console\RequestMakeComma
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
+    #[\Override]
     public function handle()
     {
         return $this->generateCode() ? self::SUCCESS : self::FAILURE;
@@ -46,6 +47,7 @@ class RequestMakeCommand extends \Illuminate\Foundation\Console\RequestMakeComma
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function getPath($name)
     {
         return $this->getPathUsingCanvas($name);
@@ -56,6 +58,7 @@ class RequestMakeCommand extends \Illuminate\Foundation\Console\RequestMakeComma
      *
      * @return string
      */
+    #[\Override]
     protected function rootNamespace()
     {
         return $this->rootNamespaceUsingCanvas();

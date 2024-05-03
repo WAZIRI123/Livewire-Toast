@@ -104,14 +104,17 @@ class Ray
     /** @var string */
     public static $projectName = '';
 
-    public static function create(Client $client = null, string $uuid = null): self
+    /** @var Closure|null */
+    public static $beforeSendRequest = null;
+
+    public static function create(?Client $client = null, ?string $uuid = null): self
     {
         $settings = SettingsFactory::createFromConfigFile();
 
         return new static($settings, $client, $uuid);
     }
 
-    public function __construct(Settings $settings, Client $client = null, string $uuid = null)
+    public function __construct(Settings $settings, ?Client $client = null, ?string $uuid = null)
     {
         $this->settings = $settings;
 
@@ -813,6 +816,10 @@ class Ray
             'project_name' => static::$projectName,
         ], $meta);
 
+        if ($closure = static::$beforeSendRequest) {
+            $closure($payloads, $allMeta);
+        }
+
         foreach ($payloads as $payload) {
             $payload->remotePath = $this->settings->remote_path;
             $payload->localPath = $this->settings->local_path;
@@ -850,5 +857,10 @@ class Ray
         self::$client->send($request);
 
         self::rateLimiter()->notify();
+    }
+
+    public static function beforeSendRequest(?Closure $closure = null): void
+    {
+        static::$beforeSendRequest = $closure;
     }
 }

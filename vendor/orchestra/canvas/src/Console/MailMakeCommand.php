@@ -9,7 +9,7 @@ use Orchestra\Canvas\Core\Concerns\UsesGeneratorOverrides;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/9.x/src/Illuminate/Foundation/Console/MailMakeCommand.php
+ * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Foundation/Console/MailMakeCommand.php
  */
 #[AsCommand(name: 'make:mail', description: 'Create a new email class')]
 class MailMakeCommand extends \Illuminate\Foundation\Console\MailMakeCommand
@@ -37,6 +37,7 @@ class MailMakeCommand extends \Illuminate\Foundation\Console\MailMakeCommand
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
+    #[\Override]
     public function handle()
     {
         return $this->generateCode() ? self::SUCCESS : self::FAILURE;
@@ -58,6 +59,7 @@ class MailMakeCommand extends \Illuminate\Foundation\Console\MailMakeCommand
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function getPath($name)
     {
         return $this->getPathUsingCanvas($name);
@@ -68,6 +70,7 @@ class MailMakeCommand extends \Illuminate\Foundation\Console\MailMakeCommand
      *
      * @return string
      */
+    #[\Override]
     protected function rootNamespace()
     {
         return $this->rootNamespaceUsingCanvas();

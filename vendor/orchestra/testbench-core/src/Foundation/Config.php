@@ -8,6 +8,7 @@ use Illuminate\Support\LazyCollection;
 use Orchestra\Testbench\Contracts\Config as ConfigContract;
 use Symfony\Component\Yaml\Yaml;
 
+use function Illuminate\Filesystem\join_paths;
 use function Orchestra\Testbench\parse_environment_variables;
 use function Orchestra\Testbench\transform_relative_path;
 
@@ -18,13 +19,13 @@ use function Orchestra\Testbench\transform_relative_path;
  *   env: array,
  *   providers: array<int, class-string>,
  *   dont-discover: array<int, string>,
- *   bootstrappers: class-string|array<int, class-string>|null
+ *   bootstrappers: array<int, class-string>|class-string|null
  * }
  * @phpstan-type TOptionalExtraConfig array{
  *   env?: array,
  *   providers?: array<int, class-string>,
  *   dont-discover?: array<int, string>,
- *   bootstrappers?: class-string|array<int, class-string>|null
+ *   bootstrappers?: array<int, class-string>|class-string|null
  * }
  * @phpstan-type TPurgeConfig array{
  *   directories: array<int, string>,
@@ -41,7 +42,7 @@ use function Orchestra\Testbench\transform_relative_path;
  *   install: bool,
  *   welcome: bool|null,
  *   sync: array<int, array{from: string, to: string}>,
- *   build: array<int, string>,
+ *   build: array<int|string, array<string, mixed>|string>,
  *   assets: array<int, string>,
  *   discovers: TWorkbenchDiscoversConfig
  * }
@@ -52,7 +53,7 @@ use function Orchestra\Testbench\transform_relative_path;
  *   install?: bool,
  *   welcome?: bool|null,
  *   sync?: array<int, array{from: string, to: string}>,
- *   build?: array<int, string>,
+ *   build?: array<int|string, array<string, mixed>|string>,
  *   assets?: array<int, string>,
  *   discovers?: TWorkbenchOptionalDiscoversConfig
  * }
@@ -61,6 +62,7 @@ use function Orchestra\Testbench\transform_relative_path;
  *   web: bool,
  *   api: bool,
  *   commands: bool,
+ *   components: bool,
  *   views: bool
  * }
  * @phpstan-type TWorkbenchOptionalDiscoversConfig array{
@@ -68,6 +70,7 @@ use function Orchestra\Testbench\transform_relative_path;
  *   web?: bool,
  *   api?: bool,
  *   commands?: bool,
+ *   components?: bool,
  *   views?: bool
  * }
  * @phpstan-type TConfig array{
@@ -75,9 +78,9 @@ use function Orchestra\Testbench\transform_relative_path;
  *   env: array,
  *   providers: array<int, class-string>,
  *   dont-discover: array<int, string>,
- *   bootstrappers: class-string|array<int, class-string>|null,
- *   migrations: string|array<int, string>|bool,
- *   seeders: class-string|array<int, class-string>|bool,
+ *   bootstrappers: array<int, class-string>|class-string|null,
+ *   migrations: array<int, string>|bool|string,
+ *   seeders: array<int, class-string>|bool|class-string,
  *   purge: TOptionalPurgeConfig,
  *   workbench: TOptionalWorkbenchConfig
  * }
@@ -86,9 +89,9 @@ use function Orchestra\Testbench\transform_relative_path;
  *   env?: array,
  *   providers?: array<int, class-string>,
  *   dont-discover?: array<int, string>,
- *   bootstrappers?: class-string|array<int, class-string>|null,
- *   migrations?: string|array<int, string>|bool,
- *   seeders?: class-string|array<int, class-string>|bool,
+ *   bootstrappers?: array<int, class-string>|class-string|null,
+ *   migrations?: array<int, string>|bool|string,
+ *   seeders?: array<int, class-string>|bool|class-string,
  *   purge?: TOptionalPurgeConfig|null,
  *   workbench?: TOptionalWorkbenchConfig|null
  * }
@@ -147,6 +150,7 @@ class Config extends Fluent implements ConfigContract
             'web' => false,
             'api' => false,
             'commands' => false,
+            'components' => false,
             'views' => false,
         ],
     ];
@@ -163,6 +167,7 @@ class Config extends Fluent implements ConfigContract
         'web' => false,
         'api' => false,
         'commands' => false,
+        'components' => false,
         'views' => false,
     ];
 
@@ -190,9 +195,8 @@ class Config extends Fluent implements ConfigContract
             yield $filename;
             yield "{$filename}.example";
             yield "{$filename}.dist";
-        })->filter(static function ($file) use ($workingPath) {
-            return file_exists($workingPath.DIRECTORY_SEPARATOR.$file);
-        })->first();
+        })->filter(static fn ($file) => file_exists(join_paths($workingPath, $file)))
+            ->first();
 
         if (! \is_null($filename)) {
             /**
@@ -200,11 +204,11 @@ class Config extends Fluent implements ConfigContract
              *
              * @phpstan-var TOptionalConfig $config
              */
-            $config = Yaml::parseFile($workingPath.DIRECTORY_SEPARATOR.$filename);
+            $config = Yaml::parseFile(join_paths($workingPath, $filename));
 
-            $config['laravel'] = transform(Arr::get($config, 'laravel'), static function ($path) use ($workingPath) {
-                return transform_relative_path($path, $workingPath);
-            });
+            $config['laravel'] = transform(
+                Arr::get($config, 'laravel'), static fn ($path) => transform_relative_path($path, $workingPath)
+            );
 
             if (isset($config['env']) && \is_array($config['env']) && Arr::isAssoc($config['env'])) {
                 $config['env'] = parse_environment_variables($config['env']);

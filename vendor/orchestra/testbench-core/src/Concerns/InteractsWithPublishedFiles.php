@@ -4,6 +4,11 @@ namespace Orchestra\Testbench\Concerns;
 
 use Illuminate\Support\Collection;
 
+use function Illuminate\Filesystem\join_paths;
+
+/**
+ * @internal
+ */
 trait InteractsWithPublishedFiles
 {
     /**
@@ -20,10 +25,6 @@ trait InteractsWithPublishedFiles
     {
         $this->cleanUpPublishedFiles();
         $this->cleanUpPublishedMigrationFiles();
-
-        $this->beforeApplicationDestroyed(function () {
-            $this->tearDownInteractsWithPublishedFiles();
-        });
     }
 
     /**
@@ -198,9 +199,8 @@ trait InteractsWithPublishedFiles
                 ->map(fn ($file) => str_contains($file, '*') ? [...$this->app['files']->glob($file)] : $file)
                 ->flatten()
                 ->filter(fn ($file) => $this->app['files']->exists($file))
-                ->reject(static function ($file) {
-                    return str_ends_with($file, '.gitkeep') || str_ends_with($file, '.gitignore');
-                })->all()
+                ->reject(static fn ($file) => str_ends_with($file, '.gitkeep') || str_ends_with($file, '.gitignore'))
+                ->all()
         );
     }
 
@@ -213,7 +213,7 @@ trait InteractsWithPublishedFiles
             ? $this->app->basePath($directory)
             : $this->app->databasePath('migrations');
 
-        return $this->app['files']->glob("{$migrationPath}/*{$filename}")[0] ?? null;
+        return $this->app['files']->glob(join_paths($migrationPath, "*{$filename}"))[0] ?? null;
     }
 
     /**
@@ -223,9 +223,8 @@ trait InteractsWithPublishedFiles
     {
         $this->app['files']->delete(
             Collection::make($this->app['files']->files($this->app->databasePath('migrations')))
-                ->filter(static function ($file) {
-                    return str_ends_with($file, '.php');
-                })->all()
+                ->filter(static fn ($file) => str_ends_with($file, '.php'))
+                ->all()
         );
     }
 }

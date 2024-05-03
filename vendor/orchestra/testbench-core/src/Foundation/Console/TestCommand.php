@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use NunoMaduro\Collision\Adapters\Laravel\Commands\TestCommand as Command;
 use Orchestra\Testbench\Foundation\Env;
 
+use function Orchestra\Testbench\defined_environment_variables;
 use function Orchestra\Testbench\package_path;
 
 class TestCommand extends Command
@@ -55,6 +56,7 @@ class TestCommand extends Command
      *
      * @return mixed
      */
+    #[\Override]
     public function handle()
     {
         Env::enablePutenv();
@@ -72,11 +74,10 @@ class TestCommand extends Command
         $configurationFile = str_replace('./', '', $this->option('configuration') ?? 'phpunit.xml');
 
         return Collection::make([
-            package_path('/'.$configurationFile),
-            package_path('/'.$configurationFile.'.dist'),
-        ])->filter(static function ($path) {
-            return file_exists($path);
-        })->first() ?? './';
+            package_path(DIRECTORY_SEPARATOR.$configurationFile),
+            package_path(DIRECTORY_SEPARATOR.$configurationFile.'.dist'),
+        ])->filter(static fn ($path) => file_exists($path))
+            ->first() ?? './';
     }
 
     /**
@@ -85,14 +86,14 @@ class TestCommand extends Command
      * @param  array  $options
      * @return array
      */
+    #[\Override]
     protected function phpunitArguments($options)
     {
         $file = $this->phpUnitConfigurationFile();
 
         return Collection::make(parent::phpunitArguments($options))
-            ->reject(static function ($option) {
-                return str_starts_with($option, '--configuration=');
-            })->merge(["--configuration={$file}"])
+            ->reject(static fn ($option) => str_starts_with($option, '--configuration='))
+            ->merge(["--configuration={$file}"])
             ->all();
     }
 
@@ -102,15 +103,14 @@ class TestCommand extends Command
      * @param  array  $options
      * @return array
      */
+    #[\Override]
     protected function paratestArguments($options)
     {
         $file = $this->phpUnitConfigurationFile();
 
         return Collection::make(parent::paratestArguments($options))
-            ->reject(static function (string $option) {
-                return str_starts_with($option, '--configuration=')
-                    || str_starts_with($option, '--runner=');
-            })->merge([
+            ->reject(static fn (string $option) => str_starts_with($option, '--configuration=') || str_starts_with($option, '--runner='))
+            ->merge([
                 "--configuration={$file}",
                 "--runner=\Orchestra\Testbench\Foundation\ParallelRunner",
             ])->all();
@@ -121,16 +121,17 @@ class TestCommand extends Command
      *
      * @return array
      */
+    #[\Override]
     protected function phpunitEnvironmentVariables()
     {
-        return array_merge([
-            'APP_KEY' => Env::forward('APP_KEY'),
-            'APP_DEBUG' => Env::forward('APP_DEBUG'),
-            'APP_ENV' => 'testing',
-            'TESTBENCH_PACKAGE_TESTER' => '(true)',
-            'TESTBENCH_WORKING_PATH' => TESTBENCH_WORKING_PATH,
-            'TESTBENCH_APP_BASE_PATH' => $this->laravel->basePath(),
-        ], parent::phpunitEnvironmentVariables());
+        return Collection::make(defined_environment_variables())
+            ->merge([
+                'APP_ENV' => 'testing',
+                'TESTBENCH_PACKAGE_TESTER' => '(true)',
+                'TESTBENCH_WORKING_PATH' => TESTBENCH_WORKING_PATH,
+                'TESTBENCH_APP_BASE_PATH' => $this->laravel->basePath(),
+            ])->merge(parent::phpunitEnvironmentVariables())
+            ->all();
     }
 
     /**
@@ -138,16 +139,17 @@ class TestCommand extends Command
      *
      * @return array
      */
+    #[\Override]
     protected function paratestEnvironmentVariables()
     {
-        return array_merge([
-            'APP_KEY' => Env::forward('APP_KEY'),
-            'APP_DEBUG' => Env::forward('APP_DEBUG'),
-            'APP_ENV' => 'testing',
-            'TESTBENCH_PACKAGE_TESTER' => '(true)',
-            'TESTBENCH_WORKING_PATH' => TESTBENCH_WORKING_PATH,
-            'TESTBENCH_APP_BASE_PATH' => $this->laravel->basePath(),
-        ], parent::paratestEnvironmentVariables());
+        return Collection::make(defined_environment_variables())
+            ->merge([
+                'APP_ENV' => 'testing',
+                'TESTBENCH_PACKAGE_TESTER' => '(true)',
+                'TESTBENCH_WORKING_PATH' => TESTBENCH_WORKING_PATH,
+                'TESTBENCH_APP_BASE_PATH' => $this->laravel->basePath(),
+            ])->merge(parent::paratestEnvironmentVariables())
+            ->all();
     }
 
     /**
@@ -155,6 +157,7 @@ class TestCommand extends Command
      *
      * @return string
      */
+    #[\Override]
     protected function getConfigurationFile()
     {
         return $this->phpUnitConfigurationFile();

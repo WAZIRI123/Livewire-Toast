@@ -3,52 +3,37 @@
 namespace Orchestra\Testbench\Attributes;
 
 use Attribute;
+use Orchestra\Testbench\Contracts\Attributes\Resolvable as ResolvableContract;
+use Orchestra\Testbench\Contracts\Attributes\TestingFeature;
 
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final class Define
+final class Define implements ResolvableContract
 {
-    /**
-     * The target group (env, db, route).
-     *
-     * @var string
-     */
-    public $group;
-
-    /**
-     * The target method.
-     *
-     * @var string
-     */
-    public $method;
-
     /**
      * Construct a new attribute.
      *
      * @param  string  $group
      * @param  string  $method
      */
-    public function __construct(string $group, string $method)
-    {
-        $this->group = $group;
-        $this->method = $method;
+    public function __construct(
+        public string $group,
+        public string $method
+    ) {
+        //
     }
 
     /**
      * Resolve the actual attribute class.
      *
-     * @return object|null
+     * @return \Orchestra\Testbench\Contracts\Attributes\TestingFeature|null
      */
-    public function resolve(): ?object
+    public function resolve(): ?TestingFeature
     {
-        switch (strtolower($this->group)) {
-            case 'env':
-                return new DefineEnvironment($this->method);
-            case 'db':
-                return new DefineDatabase($this->method);
-            case 'route':
-                return new DefineRoute($this->method);
-            default:
-                return null;
-        }
+        return match (strtolower($this->group)) {
+            'env' => new DefineEnvironment($this->method),
+            'db' => new DefineDatabase($this->method),
+            'route' => new DefineRoute($this->method),
+            default => null,
+        };
     }
 }

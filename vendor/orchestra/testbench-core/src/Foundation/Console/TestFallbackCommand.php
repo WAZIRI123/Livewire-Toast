@@ -7,6 +7,7 @@ use RuntimeException;
 use Symfony\Component\Process\Exception\ProcessSignaledException;
 use Symfony\Component\Process\Process;
 
+use function Illuminate\Filesystem\join_paths;
 use function Orchestra\Testbench\phpunit_version_compare;
 
 class TestFallbackCommand extends Command
@@ -112,8 +113,7 @@ class TestFallbackCommand extends Command
      */
     protected function findComposer()
     {
-        /** @phpstan-ignore-next-line */
-        $composerPath = TESTBENCH_WORKING_PATH.'/composer.phar';
+        $composerPath = join_paths(TESTBENCH_WORKING_PATH, 'composer.phar'); // @phpstan-ignore-line
 
         if (file_exists($composerPath)) {
             return '"'.PHP_BINARY.'" '.$composerPath;

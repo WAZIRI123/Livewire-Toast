@@ -24,27 +24,31 @@
         }
     },
     "require": {
-        "php": "^8.0",
+        "php": "^8.1",
         "composer-runtime-api": "^2.2",
         "fakerphp/faker": "^1.21",
-        "laravel/framework": "^9.52.15 || ^10.26.0",
+        "laravel/framework": "^10.38.1",
         "laravel/tinker": "^2.8.2",
-        "orchestra/canvas": "^7.10.0 || ^8.11.0",
-        "orchestra/testbench-core": "^7.34.0 || ^8.14.0",
-        "symfony/yaml": "^6.0.9"
+        "orchestra/canvas": "^8.11.4",
+        "orchestra/testbench-core": "^8.22",
+        "spatie/laravel-ray": "^1.32.4",
+        "symfony/polyfill-php83": "^1.28",
+        "symfony/yaml": "^6.2"
     },
     "require-dev": {
         "laravel/pint": "^1.4",
         "mockery/mockery": "^1.5.1",
         "phpstan/phpstan": "^1.10.7",
-        "phpunit/phpunit": "^9.6",
-        "spatie/laravel-ray": "^1.32.4",
-        "symfony/process": "^6.0.9"
+        "phpunit/phpunit": "^10.1",
+        "symfony/process": "^6.2"
     },
     "extra": {
         "branch-alias": {
             "dev-master": "0.5.x-dev"
         }
+    },
+    "suggest": {
+        "ext-pcntl": "Required to use all features of the console signal trapping."
     },
     "scripts": {
         "post-autoload-dump": [
@@ -55,6 +59,7 @@
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "build": "@php vendor/bin/testbench workbench:build --ansi",
         "serve": [
+            "Composer\\Config::disableProcessTimeout",
             "@build",
             "@php vendor/bin/testbench serve"
         ],

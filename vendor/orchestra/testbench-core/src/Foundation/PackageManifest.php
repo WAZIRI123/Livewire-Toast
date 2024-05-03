@@ -7,6 +7,8 @@ use Illuminate\Foundation\PackageManifest as IlluminatePackageManifest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
+use function Illuminate\Filesystem\join_paths;
+
 /**
  * @internal
  */
@@ -93,6 +95,7 @@ class PackageManifest extends IlluminatePackageManifest
      *
      * @return array
      */
+    #[\Override]
     protected function getManifest()
     {
         $ignore = ! \is_null($this->testbench) && method_exists($this->testbench, 'ignorePackageDiscoveriesFrom')
@@ -102,10 +105,8 @@ class PackageManifest extends IlluminatePackageManifest
         $ignoreAll = \in_array('*', $ignore);
 
         return Collection::make(parent::getManifest())
-            ->reject(function ($configuration, $package) use ($ignore, $ignoreAll) {
-                return ($ignoreAll && ! \in_array($package, $this->requiredPackages))
-                    || \in_array($package, $ignore);
-            })->map(static function ($configuration, $key) {
+            ->reject(fn ($configuration, $package) => ($ignoreAll && ! \in_array($package, $this->requiredPackages)) || \in_array($package, $ignore))
+            ->map(static function ($configuration, $key) {
                 foreach ($configuration['providers'] ?? [] as $provider) {
                     if (! class_exists($provider)) {
                         return null;
@@ -121,6 +122,7 @@ class PackageManifest extends IlluminatePackageManifest
      *
      * @return array
      */
+    #[\Override]
     protected function packagesToIgnore()
     {
         return [];
@@ -147,9 +149,9 @@ class PackageManifest extends IlluminatePackageManifest
      */
     protected function providersFromTestbench()
     {
-        if (\defined('TESTBENCH_WORKING_PATH') && is_file(TESTBENCH_WORKING_PATH.'/composer.json')) {
+        if (\defined('TESTBENCH_WORKING_PATH') && is_file(join_paths(TESTBENCH_WORKING_PATH, 'composer.json'))) {
             /** @var array{name: string, extra?: array{laravel?: array}} $composer */
-            $composer = $this->files->json(TESTBENCH_WORKING_PATH.'/composer.json');
+            $composer = $this->files->json(join_paths(TESTBENCH_WORKING_PATH, 'composer.json'));
 
             return $composer;
         }
@@ -165,6 +167,7 @@ class PackageManifest extends IlluminatePackageManifest
      *
      * @throws \Exception
      */
+    #[\Override]
     protected function write(array $manifest)
     {
         parent::write(

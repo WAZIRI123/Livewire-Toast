@@ -37,11 +37,12 @@ class LoadConfigurationWithWorkbench extends LoadConfiguration
      * @param  string  $key
      * @return string
      */
+    #[\Override]
     protected function resolveConfigurationFile(string $path, string $key): string
     {
-        return $this->usesWorkbenchConfigFile === true && is_file(workbench_path("config/{$key}.php"))
-            ? workbench_path("config/{$key}.php")
-            : $path;
+        $config = workbench_path(['config', "{$key}.php"]);
+
+        return $this->usesWorkbenchConfigFile === true && is_file($config) ? $config : $path;
     }
 
     /**
@@ -50,21 +51,25 @@ class LoadConfigurationWithWorkbench extends LoadConfiguration
      * @param  \Illuminate\Support\Collection  $configurations
      * @return \Illuminate\Support\Collection
      */
+    #[\Override]
     protected function extendsLoadedConfiguration(Collection $configurations): Collection
     {
         if ($this->usesWorkbenchConfigFile === false) {
             return $configurations;
         }
 
-        LazyCollection::make(static function () {
-            foreach (Finder::create()->files()->name('*.php')->in(workbench_path('config')) as $file) {
-                yield basename($file->getRealPath(), '.php') => $file->getRealPath();
+        LazyCollection::make(function () {
+            $path = workbench_path('config');
+
+            foreach (Finder::create()->files()->name('*.php')->in($path) as $file) {
+                $directory = $this->getNestedDirectory($file, $path);
+
+                yield $directory.basename($file->getRealPath(), '.php') => $file->getRealPath();
             }
-        })->reject(static function ($path, $key) use ($configurations) {
-            return $configurations->has($key);
-        })->each(static function ($path, $key) use ($configurations) {
-            $configurations->put($key, $path);
-        });
+        })->reject(static fn ($path, $key) => $configurations->has($key))
+            ->each(static function ($path, $key) use ($configurations) {
+                $configurations->put($key, $path);
+            });
 
         return $configurations;
     }

@@ -8,8 +8,10 @@ use Orchestra\Canvas\Core\Concerns\ResolvesPresetStubs;
 use Orchestra\Canvas\Core\Concerns\UsesGeneratorOverrides;
 use Symfony\Component\Console\Attribute\AsCommand;
 
+use function Illuminate\Filesystem\join_paths;
+
 /**
- * @see https://github.com/laravel/framework/blob/9.x/src/Illuminate/Database/Console/Factories/FactoryMakeCommand.php
+ * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Database/Console/Factories/FactoryMakeCommand.php
  */
 #[AsCommand(name: 'make:factory', description: 'Create a new model factory')]
 class FactoryMakeCommand extends \Illuminate\Database\Console\Factories\FactoryMakeCommand
@@ -37,6 +39,7 @@ class FactoryMakeCommand extends \Illuminate\Database\Console\Factories\FactoryM
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
+    #[\Override]
     public function handle()
     {
         return $this->generateCode() ? self::SUCCESS : self::FAILURE;
@@ -50,7 +53,7 @@ class FactoryMakeCommand extends \Illuminate\Database\Console\Factories\FactoryM
      */
     protected function resolveDefaultStubPath($stub)
     {
-        return __DIR__.$stub;
+        return join_paths(__DIR__, $stub);
     }
 
     /**
@@ -59,6 +62,7 @@ class FactoryMakeCommand extends \Illuminate\Database\Console\Factories\FactoryM
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function getNamespace($name)
     {
         return rtrim($this->generatorPreset()->factoryNamespace(), '\\');
@@ -78,6 +82,7 @@ class FactoryMakeCommand extends \Illuminate\Database\Console\Factories\FactoryM
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function guessModelName($name)
     {
         if (str_ends_with($name, 'Factory')) {
@@ -93,6 +98,7 @@ class FactoryMakeCommand extends \Illuminate\Database\Console\Factories\FactoryM
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function getPath($name)
     {
         return $this->getPathUsingCanvas($name);
@@ -103,6 +109,7 @@ class FactoryMakeCommand extends \Illuminate\Database\Console\Factories\FactoryM
      *
      * @return string
      */
+    #[\Override]
     protected function rootNamespace()
     {
         return $this->rootNamespaceUsingCanvas();
@@ -113,6 +120,7 @@ class FactoryMakeCommand extends \Illuminate\Database\Console\Factories\FactoryM
      *
      * @return string|null
      */
+    #[\Override]
     protected function userProviderModel()
     {
         return $this->userProviderModelUsingCanvas();

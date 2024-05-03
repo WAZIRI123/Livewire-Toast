@@ -5,12 +5,15 @@ namespace Orchestra\Testbench\Concerns;
 use Closure;
 use Illuminate\Database\Events\DatabaseRefreshed;
 use Orchestra\Testbench\Attributes\DefineDatabase;
+use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Exceptions\ApplicationNotAvailableException;
+use Orchestra\Testbench\Features\TestingFeature;
 
+/**
+ * @internal
+ */
 trait HandlesDatabases
 {
-    use Database\HandlesConnections;
-
     /**
      * Setup database requirements.
      *
@@ -22,38 +25,43 @@ trait HandlesDatabases
             throw ApplicationNotAvailableException::make(__METHOD__);
         }
 
-        tap($app['config'], function ($config) {
-            $this->usesDatabaseConnectionsEnvironmentVariables($config, 'mysql', 'MYSQL');
-            $this->usesDatabaseConnectionsEnvironmentVariables($config, 'pgsql', 'POSTGRES');
-            $this->usesDatabaseConnectionsEnvironmentVariables($config, 'sqlsrv', 'MSSQL');
-        });
-
         $app['events']->listen(DatabaseRefreshed::class, function () {
             $this->defineDatabaseMigrationsAfterDatabaseRefreshed();
         });
 
         if (static::usesTestingConcern(WithLaravelMigrations::class)) {
-            /** @phpstan-ignore-next-line */
-            $this->setUpWithLaravelMigrations();
+            $this->setUpWithLaravelMigrations(); // @phpstan-ignore-line
         }
 
-        $this->defineDatabaseMigrations();
+        TestingFeature::run(
+            testCase: $this,
+            attribute: fn () => $this->parseTestMethodAttributes($app, WithMigration::class),
+        );
 
-        if (static::usesTestingConcern(HandlesAnnotations::class)) {
-            $this->parseTestMethodAnnotations($app, 'define-db');
-        }
+        $attributeCallbacks = TestingFeature::run(
+            testCase: $this,
+            default: function () {
+                $this->defineDatabaseMigrations();
+                $this->beforeApplicationDestroyed(fn () => $this->destroyDatabaseMigrations());
+            },
+            annotation: fn () => $this->parseTestMethodAnnotations($app, 'define-db'),
+            attribute: fn () => $this->parseTestMethodAttributes($app, DefineDatabase::class),
+            pest: function () {
+                $this->defineDatabaseMigrationsUsingPest(); // @phpstan-ignore-line
 
-        if (static::usesTestingConcern(HandlesAttributes::class)) {
-            $this->parseTestMethodAttributes($app, DefineDatabase::class);
-        }
+                $this->beforeApplicationDestroyed(fn () => $this->destroyDatabaseMigrationsUsingPest()); // @phpstan-ignore-line
+            },
+        )->get('attribute');
 
         $callback();
 
-        $this->defineDatabaseSeeders();
+        $attributeCallbacks->handle();
 
-        $this->beforeApplicationDestroyed(function () {
-            $this->destroyDatabaseMigrations();
-        });
+        TestingFeature::run(
+            testCase: $this,
+            default: fn () => $this->defineDatabaseSeeders(),
+            pest: fn () => $this->defineDatabaseSeedersUsingPest(), // @phpstan-ignore-line
+        );
     }
 
     /**

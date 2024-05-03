@@ -23,6 +23,14 @@ class TemporaryUploadedFile extends UploadedFile
         $tmpFile = tmpfile();
 
         parent::__construct(stream_get_meta_data($tmpFile)['uri'], $this->path);
+
+        // While running tests, update the last modified timestamp to the current
+        // Carbon timestamp (which respects time traveling), because otherwise
+        // cleanupOldUploads() will mess up with the filesystem...
+        if (app()->runningUnitTests())
+        {
+            @touch($this->path(), now()->timestamp);
+        }
     }
 
     public function getPath(): string
@@ -69,6 +77,11 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->storage->path($this->path);
     }
 
+    public function getPathname(): string
+    {
+        return $this->getRealPath();
+    }
+
     public function getClientOriginalName(): string
     {
         return $this->extractOriginalNameFromFilePath($this->path);
@@ -83,6 +96,10 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function temporaryUrl()
     {
+        if (!$this->isPreviewable()) {
+            throw new FileNotPreviewableException($this);
+        }
+
         if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
             return $this->storage->temporaryUrl(
                 $this->path,
@@ -91,7 +108,7 @@ class TemporaryUploadedFile extends UploadedFile
             );
         }
 
-        if (method_exists($this->storage->getAdapter(), 'getTemporaryUrl') || ! $this->isPreviewable()) {
+        if (method_exists($this->storage->getAdapter(), 'getTemporaryUrl')) {
             // This will throw an error because it's not used with S3.
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
@@ -154,6 +171,15 @@ class TemporaryUploadedFile extends UploadedFile
         $extension = '.'.$file->guessExtension();
 
         return $hash.$meta.$extension;
+    }
+
+    public function hashName($path = null)
+    {
+        if (app()->runningUnitTests() && str($this->getfilename())->contains('-hash=')) {
+            return str($this->getFilename())->between('-hash=', '-')->value();
+        }
+
+        return parent::hashName($path);
     }
 
     public function extractOriginalNameFromFilePath($path)

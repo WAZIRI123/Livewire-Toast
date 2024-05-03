@@ -9,7 +9,7 @@ use Orchestra\Canvas\Core\Concerns\UsesGeneratorOverrides;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/9.x/src/Illuminate/Foundation/Console/ListenerMakeCommand.php
+ * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Foundation/Console/ListenerMakeCommand.php
  */
 #[AsCommand(name: 'make:listener', description: 'Create a new event listener class')]
 class ListenerMakeCommand extends \Illuminate\Foundation\Console\ListenerMakeCommand
@@ -37,6 +37,7 @@ class ListenerMakeCommand extends \Illuminate\Foundation\Console\ListenerMakeCom
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
+    #[\Override]
     public function handle()
     {
         return $this->generateCode() ? self::SUCCESS : self::FAILURE;
@@ -48,6 +49,7 @@ class ListenerMakeCommand extends \Illuminate\Foundation\Console\ListenerMakeCom
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function getPath($name)
     {
         return $this->getPathUsingCanvas($name);
@@ -58,6 +60,7 @@ class ListenerMakeCommand extends \Illuminate\Foundation\Console\ListenerMakeCom
      *
      * @return string
      */
+    #[\Override]
     protected function rootNamespace()
     {
         return $this->rootNamespaceUsingCanvas();
@@ -68,6 +71,7 @@ class ListenerMakeCommand extends \Illuminate\Foundation\Console\ListenerMakeCom
      *
      * @return array<int, string>
      */
+    #[\Override]
     protected function possibleEvents()
     {
         return $this->possibleEventsUsingCanvas();

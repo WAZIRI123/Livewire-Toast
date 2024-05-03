@@ -2,6 +2,7 @@
 
 namespace Orchestra\Testbench\Concerns;
 
+use Closure;
 use Illuminate\Support\Collection;
 use Orchestra\Testbench\PHPUnit\AttributeParser;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
@@ -11,14 +12,46 @@ use ReflectionClass;
 
 use function Orchestra\Testbench\phpunit_version_compare;
 
+/**
+ * @internal
+ *
+ * @phpstan-import-type TTestingFeature from \Orchestra\Testbench\PHPUnit\AttributeParser
+ */
 trait InteractsWithPHPUnit
 {
+    use InteractsWithTestCase;
+
     /**
-     * The cached uses for test case.
+     * The cached test case setUp resolver.
      *
-     * @var array<class-string, class-string>|null
+     * @var (\Closure(\Closure):(void))|null
      */
-    protected static $cachedTestCaseUses;
+    protected $testCaseSetUpCallback;
+
+    /**
+     * The cached test case tearDown resolver.
+     *
+     * @var (\Closure(\Closure):(void))|null
+     */
+    protected $testCaseTearDownCallback;
+
+    /**
+     * The cached class attributes for test case.
+     *
+     * @var array<string, array<int, array{key: class-string, instance: object}>>
+     *
+     * @phpstan-var array<string, array<int, array{key: class-string<TTestingFeature>, instance: TTestingFeature}>>
+     */
+    protected static $cachedTestCaseClassAttributes = [];
+
+    /**
+     * The cached method attributes for test case.
+     *
+     * @var array<string, array<int, array{key: class-string, instance: object}>>
+     *
+     * @phpstan-var array<string, array<int, array{key: class-string<TTestingFeature>, instance: TTestingFeature}>>
+     */
+    protected static $cachedTestCaseMethodAttributes = [];
 
     /**
      * Determine if the trait is used within testing.
@@ -46,8 +79,8 @@ trait InteractsWithPHPUnit
         }
 
         [$registry, $methodName] = phpunit_version_compare('10', '>=')
-            ? [PHPUnit10Registry::getInstance(), $this->name()] /** @phpstan-ignore-line */
-            : [PHPUnit9Registry::getInstance(), $this->getName(false)]; /** @phpstan-ignore-line */
+            ? [PHPUnit10Registry::getInstance(), $this->name()] // @phpstan-ignore-line
+            : [PHPUnit9Registry::getInstance(), $this->getName(false)]; // @phpstan-ignore-line
 
         /** @var array<string, mixed> $annotations */
         $annotations = rescue(
@@ -64,7 +97,9 @@ trait InteractsWithPHPUnit
      *
      * @phpunit-overrides
      *
-     * @return \Illuminate\Support\Collection<class-string, object>
+     * @return \Illuminate\Support\Collection<class-string, array<int, object>>
+     *
+     * @phpstan-return \Illuminate\Support\Collection<class-string<TTestingFeature>, array<int, TTestingFeature>>
      */
     protected function resolvePhpUnitAttributes(): Collection
     {
@@ -74,46 +109,80 @@ trait InteractsWithPHPUnit
             return new Collection();
         }
 
+        $className = $instance->getName();
         $methodName = phpunit_version_compare('10', '>=')
-            ? $this->name() /** @phpstan-ignore-line */
-            : $this->getName(false); /** @phpstan-ignore-line */
+            ? $this->name() // @phpstan-ignore-line
+            : $this->getName(false); // @phpstan-ignore-line
 
-        /** @var array<class-string, object> $attributes */
-        $attributes = rescue(
-            fn () => AttributeParser::forMethod($instance->getName(), $methodName),
-            [],
-            false
-        );
-
-        return Collection::make($attributes);
+        return static::resolvePhpUnitAttributesForMethod($className, $methodName);
     }
 
     /**
-     * Determine if the trait is used Orchestra\Testbench\Concerns\Testing trait.
+     * Resolve PHPUnit method attributes for specific method.
      *
-     * @param  class-string|null  $trait
-     * @return bool
-     */
-    public static function usesTestingConcern(?string $trait = null): bool
-    {
-        return isset(static::cachedUsesForTestCase()[$trait ?? Testing::class]);
-    }
-
-    /**
-     * Define or get the cached uses for test case.
+     * @phpunit-overrides
      *
-     * @return array<class-string, class-string>
+     * @param  class-string  $className
+     * @param  string|null  $methodName
+     * @return \Illuminate\Support\Collection<class-string, array<int, object>>
+     *
+     * @phpstan-return \Illuminate\Support\Collection<class-string<TTestingFeature>, array<int, TTestingFeature>>
      */
-    public static function cachedUsesForTestCase(): array
+    protected static function resolvePhpUnitAttributesForMethod(string $className, ?string $methodName = null): Collection
     {
-        if (\is_null(static::$cachedTestCaseUses)) {
-            /** @var array<class-string, class-string> $uses */
-            $uses = array_flip(class_uses_recursive(static::class));
-
-            static::$cachedTestCaseUses = $uses;
+        if (! isset(static::$cachedTestCaseClassAttributes[$className])) {
+            static::$cachedTestCaseClassAttributes[$className] = rescue(
+                static fn () => AttributeParser::forClass($className), [], false
+            );
         }
 
-        return static::$cachedTestCaseUses;
+        if (! \is_null($methodName) && ! isset(static::$cachedTestCaseMethodAttributes["{$className}:{$methodName}"])) {
+            static::$cachedTestCaseMethodAttributes["{$className}:{$methodName}"] = rescue(
+                static fn () => AttributeParser::forMethod($className, $methodName), [], false
+            );
+        }
+
+        /** @var \Illuminate\Support\Collection<class-string<TTestingFeature>, array<int, TTestingFeature>> $attributes */
+        $attributes = Collection::make(array_merge(
+            static::$cachedTestCaseClassAttributes[$className],
+            ! \is_null($methodName) ? static::$cachedTestCaseMethodAttributes["{$className}:{$methodName}"] : [],
+            static::$testCaseTestingFeatures,
+        ))->groupBy('key')
+            ->map(static function ($attributes) {
+                /** @var \Illuminate\Support\Collection<int, array{key: class-string<TTestingFeature>, instance: TTestingFeature}> $attributes */
+                return $attributes->map(static function ($attribute) {
+                    /** @var array{key: class-string<TTestingFeature>, instance: TTestingFeature} $attribute */
+                    return $attribute['instance'];
+                });
+            });
+
+        return $attributes;
+    }
+
+    /**
+     * Define the setUp environment using callback.
+     *
+     * @param  \Closure(\Closure):void  $setUp
+     * @return void
+     *
+     * @codeCoverageIgnore
+     */
+    public function setUpTheEnvironmentUsing(Closure $setUp): void
+    {
+        $this->testCaseSetUpCallback = $setUp;
+    }
+
+    /**
+     * Define the tearDown environment using callback.
+     *
+     * @param  \Closure(\Closure):void  $tearDown
+     * @return void
+     *
+     * @codeCoverageIgnore
+     */
+    public function tearDownTheEnvironmentUsing(Closure $tearDown): void
+    {
+        $this->testCaseTearDownCallback = $tearDown;
     }
 
     /**
@@ -123,7 +192,7 @@ trait InteractsWithPHPUnit
      *
      * @codeCoverageIgnore
      */
-    public static function setupBeforeClassUsingPHPUnit(): void
+    public static function setUpBeforeClassUsingPHPUnit(): void
     {
         static::cachedUsesForTestCase();
     }
@@ -135,13 +204,16 @@ trait InteractsWithPHPUnit
      *
      * @codeCoverageIgnore
      */
-    public static function teardownAfterClassUsingPHPUnit(): void
+    public static function tearDownAfterClassUsingPHPUnit(): void
     {
         static::$cachedTestCaseUses = null;
+        static::$cachedTestCaseClassAttributes = [];
+        static::$cachedTestCaseMethodAttributes = [];
 
         $registry = phpunit_version_compare('10', '>=')
-            ? PHPUnit10Registry::getInstance() /** @phpstan-ignore-line */
-            : PHPUnit9Registry::getInstance(); /** @phpstan-ignore-line */
+            ? PHPUnit10Registry::getInstance() // @phpstan-ignore-line
+            : PHPUnit9Registry::getInstance(); // @phpstan-ignore-line
+
         (function () {
             $this->classDocBlocks = [];
             $this->methodDocBlocks = [];

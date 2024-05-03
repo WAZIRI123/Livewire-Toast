@@ -4,6 +4,7 @@ namespace Orchestra\Testbench\Workbench;
 
 use Illuminate\Contracts\Foundation\Application as ApplicationContract;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Collection;
 use Orchestra\Testbench\Contracts\Config as ConfigContract;
 use Orchestra\Testbench\Foundation\Config;
 use Orchestra\Testbench\Foundation\Env;
@@ -45,9 +46,7 @@ class Workbench
      */
     public static function start(ApplicationContract $app, ConfigContract $config): void
     {
-        $app->singleton(ConfigContract::class, static function () use ($config) {
-            return $config;
-        });
+        $app->singleton(ConfigContract::class, static fn () => $config);
     }
 
     /**
@@ -78,11 +77,11 @@ class Workbench
         /** @var TWorkbenchDiscoversConfig $discoversConfig */
         $discoversConfig = $config->getWorkbenchDiscoversAttributes();
 
-        $app->booted(function ($app) use ($discoversConfig) {
+        $app->booted(static function ($app) use ($discoversConfig) {
             tap($app->make('router'), static function (Router $router) use ($discoversConfig) {
                 foreach (['web', 'api'] as $group) {
                     if (($discoversConfig[$group] ?? false) === true) {
-                        if (file_exists($route = workbench_path("routes/{$group}.php"))) {
+                        if (file_exists($route = workbench_path(['routes', "{$group}.php"]))) {
                             $router->middleware($group)->group($route);
                         }
                     }
@@ -90,7 +89,7 @@ class Workbench
             });
 
             if ($app->runningInConsole() && ($discoversConfig['commands'] ?? false) === true) {
-                if (file_exists($console = workbench_path('routes/console.php'))) {
+                if (file_exists($console = workbench_path(['routes', 'console.php']))) {
                     require $console;
                 }
             }
@@ -98,26 +97,40 @@ class Workbench
 
         after_resolving($app, 'translator', static function ($translator) {
             /** @var \Illuminate\Contracts\Translation\Loader $translator */
-            $translator->addNamespace(
-                'workbench',
-                is_dir(workbench_path('/lang')) ? workbench_path('/lang') : workbench_path('/resources/lang')
-            );
+            $path = Collection::make([
+                workbench_path('lang'),
+                workbench_path(['resources', 'lang']),
+            ])->filter(static fn ($path) => is_dir($path))
+                ->first();
+
+            if (\is_null($path)) {
+                return;
+            }
+
+            $translator->addNamespace('workbench', $path);
         });
 
-        after_resolving($app, 'view', static function ($view) use ($discoversConfig) {
+        after_resolving($app, 'view', static function ($view, $app) use ($discoversConfig) {
             /** @var \Illuminate\Contracts\View\Factory|\Illuminate\View\Factory $view */
-            $path = workbench_path('/resources/views');
+            if (! is_dir($path = workbench_path(['resources', 'views']))) {
+                return;
+            }
 
             if (($discoversConfig['views'] ?? false) === true && method_exists($view, 'addLocation')) {
                 $view->addLocation($path);
-            } else {
-                $view->addNamespace('workbench', $path);
+
+                tap($app->make('config'), static fn ($config) => $config->set('view.paths', array_merge(
+                    $config->get('view.paths', []),
+                    [$path]
+                )));
             }
+
+            $view->addNamespace('workbench', $path);
         });
 
         after_resolving($app, 'blade.compiler', static function ($blade) use ($discoversConfig) {
             /** @var \Illuminate\View\Compilers\BladeCompiler $blade */
-            if (($discoversConfig['views'] ?? false) === false) {
+            if (($discoversConfig['components'] ?? false) === false && is_dir(workbench_path(['app', 'View', 'Components']))) {
                 $blade->componentNamespace('Workbench\\App\\View\\Components', 'workbench');
             }
         });
@@ -137,7 +150,7 @@ class Workbench
 
             if (\defined('TESTBENCH_WORKING_PATH')) {
                 $workingPath = TESTBENCH_WORKING_PATH;
-            } elseif (! \is_null(Env::get('TESTBENCH_WORKING_PATH'))) {
+            } elseif (Env::has('TESTBENCH_WORKING_PATH')) {
                 $workingPath = Env::get('TESTBENCH_WORKING_PATH');
             }
 
@@ -155,7 +168,7 @@ class Workbench
     public static function applicationConsoleKernel(): ?string
     {
         if (! isset(static::$cachedCoreBindings['kernel']['console'])) {
-            static::$cachedCoreBindings['kernel']['console'] = file_exists(workbench_path('/app/Console/Kernel.php'))
+            static::$cachedCoreBindings['kernel']['console'] = file_exists(workbench_path(['app', 'Console', 'Kernel.php']))
                 ? 'Workbench\App\Console\Kernel'
                 : null;
         }
@@ -171,7 +184,7 @@ class Workbench
     public static function applicationHttpKernel(): ?string
     {
         if (! isset(static::$cachedCoreBindings['kernel']['http'])) {
-            static::$cachedCoreBindings['kernel']['http'] = file_exists(workbench_path('/app/Http/Kernel.php'))
+            static::$cachedCoreBindings['kernel']['http'] = file_exists(workbench_path(['app', 'Http', 'Kernel.php']))
                 ? 'Workbench\App\Http\Kernel'
                 : null;
         }
@@ -187,7 +200,7 @@ class Workbench
     public static function applicationExceptionHandler(): ?string
     {
         if (! isset(static::$cachedCoreBindings['handler']['exception'])) {
-            static::$cachedCoreBindings['handler']['exception'] = file_exists(workbench_path('/app/Exceptions/Exceptions.php'))
+            static::$cachedCoreBindings['handler']['exception'] = file_exists(workbench_path(['app', 'Exceptions', 'Exceptions.php']))
                 ? 'Workbench\App\Exceptions\Handler'
                 : null;
         }

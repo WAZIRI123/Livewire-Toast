@@ -24,6 +24,7 @@ class Commander extends \Orchestra\Testbench\Console\Commander
      *
      * @return \Closure(\Illuminate\Foundation\Application):void
      */
+    #[\Override]
     protected function resolveApplicationCallback()
     {
         return static function ($app) {
@@ -36,18 +37,21 @@ class Commander extends \Orchestra\Testbench\Console\Commander
      *
      * @return \Illuminate\Foundation\Application
      */
+    #[\Override]
     public function laravel()
     {
         if (! $this->app instanceof LaravelApplication) {
             $app = parent::laravel();
 
+            /** @var \Illuminate\Contracts\Console\Kernel $kernel */
             $kernel = $app->make(ConsoleKernel::class);
 
             $app->register(LaravelServiceProvider::class);
 
             Collection::make($kernel->all())
                 ->reject(static function (SymfonyCommand $command, string $name) {
-                    return str_starts_with('make:', $name) || $command instanceof GeneratorCommand;
+                    return $command instanceof GeneratorCommand
+                        || $command instanceof MigrateMakeCommand;
                 })->each(static function (SymfonyCommand $command) {
                     $command->setHidden(true);
                 });

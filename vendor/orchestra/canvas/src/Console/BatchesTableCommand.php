@@ -8,7 +8,7 @@ use Orchestra\Canvas\Core\Concerns\MigrationGenerator;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/9.x/src/Illuminate/Queue/Console/BatchesTableCommand.php
+ * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Queue/Console/BatchesTableCommand.php
  */
 #[AsCommand(name: 'queue:batches-table', description: 'Create a migration for the batches database table')]
 class BatchesTableCommand extends \Illuminate\Queue\Console\BatchesTableCommand
@@ -35,6 +35,7 @@ class BatchesTableCommand extends \Illuminate\Queue\Console\BatchesTableCommand
      * @param  string  $table
      * @return string
      */
+    #[\Override]
     protected function createBaseMigration($table)
     {
         return $this->createBaseMigrationUsingCanvas($table);
@@ -46,6 +47,7 @@ class BatchesTableCommand extends \Illuminate\Queue\Console\BatchesTableCommand
      * @param  string  $table
      * @return bool
      */
+    #[\Override]
     protected function migrationExists($table)
     {
         return $this->migrationExistsUsingCanvas($table);

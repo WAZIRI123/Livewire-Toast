@@ -43,6 +43,7 @@ abstract class TestCase extends PHPUnit\TestCase implements Contracts\TestCase
      *
      * @return void
      */
+    #[\Override]
     protected function setUp(): void
     {
         static::$latestResponse = null;
@@ -55,6 +56,7 @@ abstract class TestCase extends PHPUnit\TestCase implements Contracts\TestCase
      *
      * @return void
      */
+    #[\Override]
     protected function tearDown(): void
     {
         $this->tearDownTheTestEnvironment();
@@ -100,8 +102,9 @@ abstract class TestCase extends PHPUnit\TestCase implements Contracts\TestCase
             Concerns\HandlesAnnotations::class,
             Concerns\HandlesDatabases::class,
             Concerns\HandlesRoutes::class,
-            Concerns\InteractsWithMigrations::class,
+            Concerns\InteractsWithPest::class,
             Concerns\InteractsWithPHPUnit::class,
+            Concerns\InteractsWithTestCase::class,
             Concerns\InteractsWithWorkbench::class,
             Concerns\Testing::class,
             Concerns\WithFactories::class,
@@ -126,10 +129,18 @@ abstract class TestCase extends PHPUnit\TestCase implements Contracts\TestCase
      *
      * @codeCoverageIgnore
      */
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
-        static::setupBeforeClassUsingPHPUnit();
-        static::setupBeforeClassUsingWorkbench();
+        static::setUpBeforeClassUsingPHPUnit();
+
+        /** @phpstan-ignore-next-line */
+        if (static::usesTestingConcern(Pest\WithPest::class)) {
+            static::setUpBeforeClassUsingPest(); // @phpstan-ignore-line
+        }
+
+        static::setUpBeforeClassUsingTestCase();
+        static::setUpBeforeClassUsingWorkbench();
     }
 
     /**
@@ -139,11 +150,17 @@ abstract class TestCase extends PHPUnit\TestCase implements Contracts\TestCase
      *
      * @codeCoverageIgnore
      */
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
-        static::$latestResponse = null;
+        static::tearDownAfterClassUsingWorkbench();
+        static::tearDownAfterClassUsingTestCase();
 
-        static::teardownAfterClassUsingWorkbench();
-        static::teardownAfterClassUsingPHPUnit();
+        /** @phpstan-ignore-next-line */
+        if (static::usesTestingConcern(Pest\WithPest::class)) {
+            static::tearDownAfterClassUsingPest(); // @phpstan-ignore-line
+        }
+
+        static::tearDownAfterClassUsingPHPUnit();
     }
 }

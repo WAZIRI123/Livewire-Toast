@@ -15,6 +15,9 @@
             "role": "Developer"
         }
     ],
+    "bin": [
+        "bin/remove-ray.sh"
+    ],
     "require": {
         "php": "^7.3|^8.0",
         "ext-curl": "*",
@@ -22,8 +25,8 @@
         "ramsey/uuid": "^3.0|^4.1",
         "spatie/backtrace": "^1.1",
         "spatie/macroable": "^1.0|^2.0",
-        "symfony/stopwatch": "^4.0|^5.1|^6.0",
-        "symfony/var-dumper": "^4.2|^5.1|^6.0"
+        "symfony/stopwatch": "^4.0|^5.1|^6.0|^7.0",
+        "symfony/var-dumper": "^4.2|^5.1|^6.0|^7.0.3"
     },
     "require-dev": {
         "illuminate/support": "6.x|^8.18|^9.0",
@@ -31,6 +34,7 @@
         "pestphp/pest": "^1.22",
         "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^9.5",
+        "rector/rector": "^0.19.2",
         "spatie/phpunit-snapshot-assertions": "^4.2",
         "spatie/test-time": "^1.2"
     },
@@ -57,6 +61,11 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
         }
     },
     "minimum-stability": "dev",

@@ -5,12 +5,14 @@ namespace Livewire\Features\SupportConsoleCommands\Commands;
 use function Livewire\invade;
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:configure-s3-upload-cleanup')]
 class S3CleanupCommand extends Command
 {
     protected $signature = 'livewire:configure-s3-upload-cleanup';
 
-    protected $description = 'Configure temporary file upload s3 directory to automatically cleanup files older than 24hrs.';
+    protected $description = 'Configure temporary file upload s3 directory to automatically cleanup files older than 24hrs';
 
     public function handle()
     {

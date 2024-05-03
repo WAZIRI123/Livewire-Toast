@@ -9,7 +9,7 @@ use Orchestra\Canvas\Core\Concerns\UsesGeneratorOverrides;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/9.x/src/Illuminate/Foundation/Console/NotificationMakeCommand.php
+ * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Foundation/Console/NotificationMakeCommand.php
  */
 #[AsCommand(name: 'make:notification', description: 'Create a new notification class')]
 class NotificationMakeCommand extends \Illuminate\Foundation\Console\NotificationMakeCommand
@@ -37,6 +37,7 @@ class NotificationMakeCommand extends \Illuminate\Foundation\Console\Notificatio
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
+    #[\Override]
     public function handle()
     {
         return $this->generateCode() ? self::SUCCESS : self::FAILURE;
@@ -58,6 +59,7 @@ class NotificationMakeCommand extends \Illuminate\Foundation\Console\Notificatio
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function getPath($name)
     {
         return $this->getPathUsingCanvas($name);
@@ -68,6 +70,7 @@ class NotificationMakeCommand extends \Illuminate\Foundation\Console\Notificatio
      *
      * @return string
      */
+    #[\Override]
     protected function rootNamespace()
     {
         return $this->rootNamespaceUsingCanvas();

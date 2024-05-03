@@ -21,7 +21,7 @@ class TestbenchServiceProvider extends ServiceProvider
         AboutCommand::add('Testbench', fn () => array_filter([
             'Core Version' => InstalledVersions::getPrettyVersion('orchestra/testbench-core'),
             'Dusk Version' => InstalledVersions::isInstalled('orchestra/testbench-dusk') ? InstalledVersions::getPrettyVersion('orchestra/testbench-dusk') : null,
-            'Skeleton Path' => str_replace($workingPath, '', $this->app->basePath()),
+            'Skeleton Path' => AboutCommand::format($this->app->basePath(), console: fn ($value) => str_replace($workingPath, '', $value)),
             'Version' => InstalledVersions::isInstalled('orchestra/testbench') ? InstalledVersions::getPrettyVersion('orchestra/testbench') : null,
         ]));
     }

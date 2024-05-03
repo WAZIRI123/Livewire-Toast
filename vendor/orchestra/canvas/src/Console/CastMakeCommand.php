@@ -8,7 +8,7 @@ use Orchestra\Canvas\Core\Concerns\UsesGeneratorOverrides;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/9.x/src/Illuminate/Foundation/Console/CastMakeCommand.php
+ * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Foundation/Console/CastMakeCommand.php
  */
 #[AsCommand(name: 'make:cast', description: 'Create a new custom Eloquent cast class')]
 class CastMakeCommand extends \Illuminate\Foundation\Console\CastMakeCommand
@@ -35,6 +35,7 @@ class CastMakeCommand extends \Illuminate\Foundation\Console\CastMakeCommand
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
+    #[\Override]
     public function handle()
     {
         return $this->generateCode() ? self::SUCCESS : self::FAILURE;
@@ -46,6 +47,7 @@ class CastMakeCommand extends \Illuminate\Foundation\Console\CastMakeCommand
      * @param  string  $name
      * @return string
      */
+    #[\Override]
     protected function getPath($name)
     {
         return $this->getPathUsingCanvas($name);
@@ -56,6 +58,7 @@ class CastMakeCommand extends \Illuminate\Foundation\Console\CastMakeCommand
      *
      * @return string
      */
+    #[\Override]
     protected function rootNamespace()
     {
         return $this->rootNamespaceUsingCanvas();

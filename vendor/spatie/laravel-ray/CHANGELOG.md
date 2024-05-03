@@ -2,6 +2,71 @@
 
 All notable changes to `laravel-ray` will be documented in this file
 
+## 1.36.1 - 2024-04-12
+
+### What's Changed
+
+* Bump shivammathur/setup-php from 2.30.1 to 2.30.2 by @dependabot in https://github.com/spatie/laravel-ray/pull/338
+* Make implicit nullable param to explicit (PHP 8.4 compatibility) by @GromNaN in https://github.com/spatie/laravel-ray/pull/340
+* Update branch alias for version 1.x by @GromNaN in https://github.com/spatie/laravel-ray/pull/341
+
+### New Contributors
+
+* @GromNaN made their first contribution in https://github.com/spatie/laravel-ray/pull/340
+
+**Full Changelog**: https://github.com/spatie/laravel-ray/compare/1.36.0...1.36.1
+
+## 1.36.0 - 2024-03-29
+
+### What's Changed
+
+* Bump shivammathur/setup-php from 2.29.0 to 2.30.0 by @dependabot in https://github.com/spatie/laravel-ray/pull/334
+* Bump shivammathur/setup-php from 2.30.0 to 2.30.1 by @dependabot in https://github.com/spatie/laravel-ray/pull/335
+* Bump dependabot/fetch-metadata from 1.6.0 to 2.0.0 by @dependabot in https://github.com/spatie/laravel-ray/pull/336
+* Bump ramsey/composer-install from 2 to 3 by @dependabot in https://github.com/spatie/laravel-ray/pull/333
+* Support context by @freekmurze in https://github.com/spatie/laravel-ray/pull/337
+
+**Full Changelog**: https://github.com/spatie/laravel-ray/compare/1.35.1...1.36.0
+
+## 1.35.1 - 2024-02-13
+
+**Full Changelog**: https://github.com/spatie/laravel-ray/compare/1.35.0...1.35.1
+
+## 1.35.0 - 2024-02-03
+
+### What's Changed
+
+* Supports Laravel 11 by @crynobone in https://github.com/spatie/laravel-ray/pull/329
+
+**Full Changelog**: https://github.com/spatie/laravel-ray/compare/1.34.0...1.35.0
+
+## 1.34.0 - 2024-01-25
+
+### What's Changed
+
+* Adds an artisan command to remove ray calls from your codebase.
+* Bump stefanzweifel/git-auto-commit-action from 4 to 5 by @dependabot in https://github.com/spatie/laravel-ray/pull/321
+* Bump shivammathur/setup-php from 2.28.0 to 2.29.0 by @dependabot in https://github.com/spatie/laravel-ray/pull/330
+
+**Full Changelog**: https://github.com/spatie/laravel-ray/compare/1.33.1...1.34.0
+
+## 1.33.1 - 2024-01-04
+
+- Allow symphony stopwatch 7
+
+## 1.33.0 - 2023-09-04
+
+### What's Changed
+
+- Bump shivammathur/setup-php from 2.25.4 to 2.25.5 by @dependabot in https://github.com/spatie/laravel-ray/pull/309
+- Add ability to return the results of callable by @grantholle in https://github.com/spatie/laravel-ray/pull/314
+
+### New Contributors
+
+- @grantholle made their first contribution in https://github.com/spatie/laravel-ray/pull/314
+
+**Full Changelog**: https://github.com/spatie/laravel-ray/compare/1.32.6...1.33.0
+
 ## 1.32.6 - 2023-07-19
 
 ### What's Changed
