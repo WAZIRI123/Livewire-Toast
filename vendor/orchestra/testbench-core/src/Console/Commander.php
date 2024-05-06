@@ -2,7 +2,6 @@
 
 namespace Orchestra\Testbench\Console;
 
-use Illuminate\Console\Command;
 use Illuminate\Console\Concerns\InteractsWithSignals;
 use Illuminate\Console\Signals;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
@@ -11,7 +10,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Orchestra\Testbench\Foundation\Application;
+use Orchestra\Testbench\Foundation\Application as Testbench;
 use Orchestra\Testbench\Foundation\Bootstrap\LoadMigrationsFromArray;
 use Orchestra\Testbench\Foundation\Config;
 use Orchestra\Testbench\Foundation\Console\Concerns\CopyTestbenchFiles;
@@ -48,21 +47,30 @@ class Commander
      *
      * @var \Orchestra\Testbench\Foundation\Config
      */
-    protected $config;
-
-    /**
-     * Working path.
-     *
-     * @var string
-     */
-    protected $workingPath;
+    protected readonly Config $config;
 
     /**
      * The environment file name.
      *
      * @var string
      */
-    protected $environmentFile = '.env';
+    protected string $environmentFile = '.env';
+
+    /**
+     * The testbench implementation class.
+     *
+     * @var class-string<\Orchestra\Testbench\Foundation\Application>
+     */
+    protected static string $testbench = Testbench::class;
+
+    /**
+     * List of providers.
+     *
+     * @var array<int, class-string<\Illuminate\Support\ServiceProvider>>
+     */
+    protected array $providers = [
+        TestbenchServiceProvider::class,
+    ];
 
     /**
      * Construct a new Commander.
@@ -72,10 +80,11 @@ class Commander
      *
      * @phpstan-param \Orchestra\Testbench\Foundation\Config|TConfig  $config
      */
-    public function __construct($config, string $workingPath)
-    {
+    public function __construct(
+        Config|array $config,
+        protected readonly string $workingPath
+    ) {
         $this->config = $config instanceof Config ? $config : new Config($config);
-        $this->workingPath = $workingPath;
     }
 
     /**
@@ -83,7 +92,7 @@ class Commander
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         $input = new ArgvInput();
         $output = new ConsoleOutput();
@@ -110,7 +119,7 @@ class Commander
         } finally {
             $this->handleTerminatingConsole();
             Workbench::flush();
-            Application::flushState();
+            static::$testbench::flushState($this);
 
             $this->untrap();
         }
@@ -131,11 +140,9 @@ class Commander
             $hasEnvironmentFile = fn () => file_exists(join_paths($APP_BASE_PATH, '.env'));
 
             tap(
-                Application::createVendorSymlink($APP_BASE_PATH, join_paths($this->workingPath, 'vendor')),
+                static::$testbench::createVendorSymlink($APP_BASE_PATH, join_paths($this->workingPath, 'vendor')),
                 function ($app) use ($hasEnvironmentFile) {
                     $filesystem = new Filesystem();
-
-                    $this->copyTestbenchConfigurationFile($app, $filesystem, $this->workingPath);
 
                     if (! $hasEnvironmentFile()) {
                         $this->copyTestbenchDotEnvFile($app, $filesystem, $this->workingPath);
@@ -143,25 +150,13 @@ class Commander
                 }
             );
 
-            $options = array_filter([
-                'load_environment_variables' => $hasEnvironmentFile(),
-                'extra' => $this->config->getExtraAttributes(),
-            ]);
-
-            $this->app = Application::create(
+            $this->app = static::$testbench::create(
                 basePath: $APP_BASE_PATH,
-                resolvingCallback: function ($app) {
-                    Workbench::startWithProviders($app, $this->config);
-                    Workbench::discoverRoutes($app, $this->config);
-
-                    (new LoadMigrationsFromArray(
-                        $this->config['migrations'] ?? [],
-                        $this->config['seeders'] ?? false,
-                    ))->bootstrap($app);
-
-                    \call_user_func($this->resolveApplicationCallback(), $app);
-                },
-                options: $options,
+                resolvingCallback: $this->resolveApplicationCallback(),
+                options: array_filter([
+                    'load_environment_variables' => file_exists("{$APP_BASE_PATH}/.env"),
+                    'extra' => $this->config->getExtraAttributes(),
+                ]),
             );
         }
 
@@ -169,15 +164,35 @@ class Commander
     }
 
     /**
-     * Resolve application implementation.
+     * Resolve application implementation callback.
      *
      * @return \Closure(\Illuminate\Foundation\Application): void
      */
     protected function resolveApplicationCallback()
     {
-        return static function ($app) {
-            $app->register(TestbenchServiceProvider::class);
+        return function ($app) {
+            Workbench::startWithProviders($app, $this->config);
+            Workbench::discoverRoutes($app, $this->config);
+
+            (new LoadMigrationsFromArray(
+                $this->config['migrations'] ?? [],
+                $this->config['seeders'] ?? false,
+            ))->bootstrap($app);
+
+            foreach ($this->providers as $provider) {
+                $app->register($provider);
+            }
         };
+    }
+
+    /**
+     * Get Application base path.
+     *
+     * @return string
+     */
+    public static function applicationBasePath()
+    {
+        return static::$testbench::applicationBasePath();
     }
 
     /**
@@ -189,7 +204,7 @@ class Commander
     {
         $path = $this->config['laravel'] ?? null;
 
-        if (! \is_null($path)) {
+        if (! \is_null($path) && ! isset($_ENV['APP_BASE_PATH'])) {
             return tap(transform_relative_path($path, $this->workingPath), static function ($path) {
                 $_ENV['APP_BASE_PATH'] = $path;
             });
@@ -199,23 +214,13 @@ class Commander
     }
 
     /**
-     * Get Application base path.
-     *
-     * @return string
-     */
-    public static function applicationBasePath()
-    {
-        return Application::applicationBasePath();
-    }
-
-    /**
      * Render an exception to the console.
      *
      * @param  \Symfony\Component\Console\Output\OutputInterface  $output
      * @param  \Throwable  $error
      * @return int
      */
-    protected function handleException(OutputInterface $output, Throwable $error)
+    protected function handleException(OutputInterface $output, Throwable $error): int
     {
         if ($this->app instanceof LaravelApplication) {
             tap($this->app->make(ExceptionHandler::class), static function ($handler) use ($error, $output) {

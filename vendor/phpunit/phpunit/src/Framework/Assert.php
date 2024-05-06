@@ -9,6 +9,8 @@
  */
 namespace PHPUnit\Framework;
 
+use function array_combine;
+use function array_intersect_key;
 use function class_exists;
 use function count;
 use function file_get_contents;
@@ -71,6 +73,86 @@ use PHPUnit\Util\Xml\XmlException;
 abstract class Assert
 {
     private static int $count = 0;
+
+    /**
+     * Asserts that two arrays are equal while only considering a list of keys.
+     *
+     * @psalm-param non-empty-list<array-key> $keysToBeConsidered
+     *
+     * @throws Exception
+     * @throws ExpectationFailedException
+     */
+    final public static function assertArrayIsEqualToArrayOnlyConsideringListOfKeys(array $expected, array $actual, array $keysToBeConsidered, string $message = ''): void
+    {
+        $filteredExpected = [];
+
+        foreach ($keysToBeConsidered as $key) {
+            if (isset($expected[$key])) {
+                $filteredExpected[$key] = $expected[$key];
+            }
+        }
+
+        $filteredActual = [];
+
+        foreach ($keysToBeConsidered as $key) {
+            if (isset($actual[$key])) {
+                $filteredActual[$key] = $actual[$key];
+            }
+        }
+
+        static::assertEquals($filteredExpected, $filteredActual, $message);
+    }
+
+    /**
+     * Asserts that two arrays are equal while ignoring a list of keys.
+     *
+     * @psalm-param non-empty-list<array-key> $keysToBeIgnored
+     *
+     * @throws Exception
+     * @throws ExpectationFailedException
+     */
+    final public static function assertArrayIsEqualToArrayIgnoringListOfKeys(array $expected, array $actual, array $keysToBeIgnored, string $message = ''): void
+    {
+        foreach ($keysToBeIgnored as $key) {
+            unset($expected[$key], $actual[$key]);
+        }
+
+        static::assertEquals($expected, $actual, $message);
+    }
+
+    /**
+     * Asserts that two arrays are identical while only considering a list of keys.
+     *
+     * @psalm-param non-empty-list<array-key> $keysToBeConsidered
+     *
+     * @throws Exception
+     * @throws ExpectationFailedException
+     */
+    final public static function assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys(array $expected, array $actual, array $keysToBeConsidered, string $message = ''): void
+    {
+        $keysToBeConsidered = array_combine($keysToBeConsidered, $keysToBeConsidered);
+        $expected           = array_intersect_key($expected, $keysToBeConsidered);
+        $actual             = array_intersect_key($actual, $keysToBeConsidered);
+
+        static::assertSame($expected, $actual, $message);
+    }
+
+    /**
+     * Asserts that two arrays are equal while ignoring a list of keys.
+     *
+     * @psalm-param non-empty-list<array-key> $keysToBeIgnored
+     *
+     * @throws Exception
+     * @throws ExpectationFailedException
+     */
+    final public static function assertArrayIsIdenticalToArrayIgnoringListOfKeys(array $expected, array $actual, array $keysToBeIgnored, string $message = ''): void
+    {
+        foreach ($keysToBeIgnored as $key) {
+            unset($expected[$key], $actual[$key]);
+        }
+
+        static::assertSame($expected, $actual, $message);
+    }
 
     /**
      * Asserts that an array has a specified key.
@@ -1617,6 +1699,11 @@ abstract class Assert
      */
     final public static function assertStringNotMatchesFormat(string $format, string $string, string $message = ''): void
     {
+        Event\Facade::emitter()->testTriggeredPhpunitDeprecation(
+            null,
+            'assertStringNotMatchesFormat() is deprecated and will be removed in PHPUnit 12 without replacement.',
+        );
+
         static::assertThat(
             $string,
             new LogicalNot(
@@ -1653,6 +1740,11 @@ abstract class Assert
      */
     final public static function assertStringNotMatchesFormatFile(string $formatFile, string $string, string $message = ''): void
     {
+        Event\Facade::emitter()->testTriggeredPhpunitDeprecation(
+            null,
+            'assertStringNotMatchesFormatFile() is deprecated and will be removed in PHPUnit 12 without replacement.',
+        );
+
         static::assertFileExists($formatFile, $message);
 
         static::assertThat(
@@ -1864,27 +1956,7 @@ abstract class Assert
     {
         self::$count += count($constraint);
 
-        $hasFailed = true;
-
-        try {
-            $constraint->evaluate($value, $message);
-
-            $hasFailed = false;
-        } finally {
-            if ($hasFailed) {
-                Event\Facade::emitter()->testAssertionFailed(
-                    $value,
-                    $constraint,
-                    $message,
-                );
-            } else {
-                Event\Facade::emitter()->testAssertionSucceeded(
-                    $value,
-                    $constraint,
-                    $message,
-                );
-            }
-        }
+        $constraint->evaluate($value, $message);
     }
 
     /**
@@ -2132,7 +2204,7 @@ abstract class Assert
 
     final public static function equalTo(mixed $value): IsEqual
     {
-        return new IsEqual($value, 0.0, false, false);
+        return new IsEqual($value);
     }
 
     final public static function equalToCanonicalizing(mixed $value): IsEqualCanonicalizing

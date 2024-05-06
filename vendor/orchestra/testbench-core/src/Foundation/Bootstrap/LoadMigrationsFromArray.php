@@ -21,29 +21,16 @@ use function Orchestra\Testbench\workbench;
 final class LoadMigrationsFromArray
 {
     /**
-     * The migrations.
-     *
-     * @var array<int, string>|bool|string
-     */
-    public $migrations;
-
-    /**
-     * The seeders.
-     *
-     * @var array<int, class-string>|bool|class-string
-     */
-    public $seeders;
-
-    /**
      * Construct a new Create Vendor Symlink bootstrapper.
      *
      * @param  array<int, string>|bool|string  $migrations
      * @param  array<int, class-string>|bool|class-string  $seeders
      */
-    public function __construct($migrations = [], $seeders = false)
-    {
-        $this->migrations = $migrations;
-        $this->seeders = $seeders;
+    public function __construct(
+        public readonly array|bool|string $migrations = [],
+        public readonly array|bool|string $seeders = false
+    ) {
+        //
     }
 
     /**

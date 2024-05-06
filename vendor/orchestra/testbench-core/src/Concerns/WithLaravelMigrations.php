@@ -7,15 +7,14 @@ use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use function Orchestra\Testbench\after_resolving;
 use function Orchestra\Testbench\laravel_migration_path;
 
-/**
- * @api
- */
 trait WithLaravelMigrations
 {
     use InteractsWithWorkbench;
 
     /**
      * Bootstrap with laravel migrations.
+     *
+     * @internal
      *
      * @return void
      */

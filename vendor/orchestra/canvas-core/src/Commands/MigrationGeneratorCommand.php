@@ -3,12 +3,11 @@
 namespace Orchestra\Canvas\Core\Commands;
 
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Composer;
 use Orchestra\Canvas\Core\Concerns\MigrationGenerator;
 
 /**
- * @property string|null  $name
- * @property string|null  $description
+ * @property string|null $name
+ * @property string|null $description
  */
 abstract class MigrationGeneratorCommand extends \Illuminate\Console\MigrationGeneratorCommand
 {
@@ -17,11 +16,12 @@ abstract class MigrationGeneratorCommand extends \Illuminate\Console\MigrationGe
     /**
      * Create a new notifications table command instance.
      *
+     * @param  \Illuminate\Filesystem\Filesystem  $files
      * @return void
      */
-    public function __construct(Filesystem $files, Composer $composer)
+    public function __construct(Filesystem $files)
     {
-        parent::__construct($files, $composer);
+        parent::__construct($files);
 
         $this->addGeneratorPresetOptions();
     }

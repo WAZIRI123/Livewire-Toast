@@ -2,14 +2,13 @@
 
 namespace Orchestra\Canvas\Console;
 
-use Illuminate\Filesystem\Filesystem;
 use Orchestra\Canvas\Core\Concerns\CodeGenerator;
 use Orchestra\Canvas\Core\Concerns\TestGenerator;
 use Orchestra\Canvas\Core\Concerns\UsesGeneratorOverrides;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Foundation/Console/NotificationMakeCommand.php
+ * @see https://github.com/laravel/framework/blob/11.x/src/Illuminate/Foundation/Console/NotificationMakeCommand.php
  */
 #[AsCommand(name: 'make:notification', description: 'Create a new notification class')]
 class NotificationMakeCommand extends \Illuminate\Foundation\Console\NotificationMakeCommand
@@ -19,13 +18,14 @@ class NotificationMakeCommand extends \Illuminate\Foundation\Console\Notificatio
     use UsesGeneratorOverrides;
 
     /**
-     * Create a new creator command instance.
+     * Configures the current command.
      *
      * @return void
      */
-    public function __construct(Filesystem $files)
+    #[\Override]
+    protected function configure()
     {
-        parent::__construct($files);
+        parent::configure();
 
         $this->addGeneratorPresetOptions();
     }

@@ -5,14 +5,16 @@ namespace Orchestra\Canvas;
 use Illuminate\Cache\Console\CacheTableCommand;
 use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Database\Console\Factories\FactoryMakeCommand;
-use Illuminate\Database\Console\Migrations\MigrateMakeCommand;
 use Illuminate\Database\Console\Seeds\SeederMakeCommand;
 use Illuminate\Foundation\Console\CastMakeCommand;
 use Illuminate\Foundation\Console\ChannelMakeCommand;
+use Illuminate\Foundation\Console\ClassMakeCommand;
 use Illuminate\Foundation\Console\ComponentMakeCommand;
 use Illuminate\Foundation\Console\ConsoleMakeCommand;
+use Illuminate\Foundation\Console\EnumMakeCommand;
 use Illuminate\Foundation\Console\EventMakeCommand;
 use Illuminate\Foundation\Console\ExceptionMakeCommand;
+use Illuminate\Foundation\Console\InterfaceMakeCommand;
 use Illuminate\Foundation\Console\JobMakeCommand;
 use Illuminate\Foundation\Console\ListenerMakeCommand;
 use Illuminate\Foundation\Console\MailMakeCommand;
@@ -37,7 +39,7 @@ use Illuminate\Session\Console\SessionTableCommand;
 use Illuminate\Support\ServiceProvider;
 
 /**
- * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Foundation/Providers/ArtisanServiceProvider.php
+ * @see https://github.com/laravel/framework/blob/11.x/src/Illuminate/Foundation/Providers/ArtisanServiceProvider.php
  */
 class LaravelServiceProvider extends ServiceProvider implements DeferrableProvider
 {
@@ -46,17 +48,20 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      *
      * @return void
      */
-    public function register()
+    public function boot()
     {
         $this->registerCastMakeCommand();
         $this->registerChannelMakeCommand();
+        $this->registerClassMakeCommand();
         $this->registerComponentMakeCommand();
         $this->registerConsoleMakeCommand();
         $this->registerControllerMakeCommand();
+        $this->registerEnumMakeCommand();
         $this->registerEventMakeCommand();
         $this->registerExceptionMakeCommand();
         $this->registerFactoryMakeCommand();
         $this->registerJobMakeCommand();
+        $this->registerInterfaceMakeCommand();
         $this->registerListenerMakeCommand();
         $this->registerMailMakeCommand();
         $this->registerMiddlewareMakeCommand();
@@ -89,11 +94,14 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
             Console\ChannelMakeCommand::class,
             Console\ComponentMakeCommand::class,
             Console\ConsoleMakeCommand::class,
+            Console\ClassMakeCommand::class,
             Console\ControllerMakeCommand::class,
+            Console\EnumMakeCommand::class,
             Console\EventMakeCommand::class,
             Console\ExceptionMakeCommand::class,
             Console\FactoryMakeCommand::class,
             Console\JobMakeCommand::class,
+            Console\InterfaceMakeCommand::class,
             Console\ListenerMakeCommand::class,
             Console\MailMakeCommand::class,
             Console\MiddlewareMakeCommand::class,
@@ -148,6 +156,16 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      *
      * @return void
      */
+    protected function registerClassMakeCommand()
+    {
+        $this->app->singleton(ClassMakeCommand::class, static fn ($app) => new Console\ClassMakeCommand($app['files']));
+    }
+
+    /**
+     * Register the command.
+     *
+     * @return void
+     */
     protected function registerComponentMakeCommand()
     {
         $this->app->singleton(ComponentMakeCommand::class, static fn ($app) => new Console\ComponentMakeCommand($app['files']));
@@ -171,6 +189,16 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
     protected function registerControllerMakeCommand()
     {
         $this->app->singleton(ControllerMakeCommand::class, static fn ($app) => new Console\ControllerMakeCommand($app['files']));
+    }
+
+    /**
+     * Register the command.
+     *
+     * @return void
+     */
+    protected function registerEnumMakeCommand()
+    {
+        $this->app->singleton(EnumMakeCommand::class, fn ($app) => new Console\EnumMakeCommand($app['files']));
     }
 
     /**
@@ -218,6 +246,16 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      *
      * @return void
      */
+    protected function registerInterfaceMakeCommand()
+    {
+        $this->app->singleton(InterfaceMakeCommand::class, static fn ($app) => new Console\InterfaceMakeCommand($app['files']));
+    }
+
+    /**
+     * Register the command.
+     *
+     * @return void
+     */
     protected function registerListenerMakeCommand()
     {
         $this->app->singleton(ListenerMakeCommand::class, static fn ($app) => new Console\ListenerMakeCommand($app['files']));
@@ -250,7 +288,7 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      */
     protected function registerMigrateMakeCommand()
     {
-        $this->app->singleton(MigrateMakeCommand::class, static function ($app) {
+        $this->app->singleton(Console\MigrateMakeCommand::class, static function ($app) {
             // Once we have the migration creator registered, we will create the command
             // and inject the creator. The creator is responsible for the actual file
             // creation of the migrations, and may be extended by these developers.
@@ -389,7 +427,7 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      */
     protected function registerCacheTableCommand()
     {
-        $this->app->singleton(CacheTableCommand::class, static fn ($app) => new Console\CacheTableCommand($app['files'], $app['composer']));
+        $this->app->singleton(CacheTableCommand::class, static fn ($app) => new Console\CacheTableCommand($app['files']));
     }
 
     /**
@@ -399,7 +437,7 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      */
     protected function registerNotificationTableCommand()
     {
-        $this->app->singleton(NotificationTableCommand::class, static fn ($app) => new Console\NotificationTableCommand($app['files'], $app['composer']));
+        $this->app->singleton(NotificationTableCommand::class, static fn ($app) => new Console\NotificationTableCommand($app['files']));
     }
 
     /**
@@ -409,7 +447,7 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      */
     protected function registerQueueBatchesTableCommand()
     {
-        $this->app->singleton(BatchesTableCommand::class, static fn ($app) => new Console\BatchesTableCommand($app['files'], $app['composer']));
+        $this->app->singleton(BatchesTableCommand::class, static fn ($app) => new Console\BatchesTableCommand($app['files']));
     }
 
     /**
@@ -419,7 +457,7 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      */
     protected function registerQueueFailedTableCommand()
     {
-        $this->app->singleton(FailedTableCommand::class, static fn ($app) => new Console\FailedTableCommand($app['files'], $app['composer']));
+        $this->app->singleton(FailedTableCommand::class, static fn ($app) => new Console\FailedTableCommand($app['files']));
     }
 
     /**
@@ -429,7 +467,7 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      */
     protected function registerQueueTableCommand()
     {
-        $this->app->singleton(QueueTableCommand::class, static fn ($app) => new Console\QueueTableCommand($app['files'], $app['composer']));
+        $this->app->singleton(QueueTableCommand::class, static fn ($app) => new Console\QueueTableCommand($app['files']));
     }
 
     /**
@@ -439,7 +477,7 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
      */
     protected function registerSessionTableCommand()
     {
-        $this->app->singleton(SessionTableCommand::class, static fn ($app) => new Console\SessionTableCommand($app['files'], $app['composer']));
+        $this->app->singleton(SessionTableCommand::class, static fn ($app) => new Console\SessionTableCommand($app['files']));
     }
 
     /**
@@ -474,18 +512,24 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
             Console\CastMakeCommand::class,
             ChannelMakeCommand::class,
             Console\ChannelMakeCommand::class,
+            ClassMakeCommand::class,
+            Console\ClassMakeCommand::class,
             ComponentMakeCommand::class,
             Console\ComponentMakeCommand::class,
             ConsoleMakeCommand::class,
             Console\ConsoleMakeCommand::class,
             ControllerMakeCommand::class,
             Console\ControllerMakeCommand::class,
+            EnumMakeCommand::class,
+            Console\EnumMakeCommand::class,
             EventMakeCommand::class,
             Console\EventMakeCommand::class,
             ExceptionMakeCommand::class,
             Console\ExceptionMakeCommand::class,
             FactoryMakeCommand::class,
             Console\FactoryMakeCommand::class,
+            InterfaceMakeCommand::class,
+            Console\InterfaceMakeCommand::class,
             JobMakeCommand::class,
             Console\JobMakeCommand::class,
             ListenerMakeCommand::class,
@@ -494,7 +538,6 @@ class LaravelServiceProvider extends ServiceProvider implements DeferrableProvid
             Console\MailMakeCommand::class,
             MiddlewareMakeCommand::class,
             Console\MiddlewareMakeCommand::class,
-            MigrateMakeCommand::class,
             Console\MigrateMakeCommand::class,
             ModelMakeCommand::class,
             Console\ModelMakeCommand::class,

@@ -72,13 +72,14 @@ class DevToolCommand extends Command
             components: $this->components,
         ))->handle(
             Collection::make([
-                'app/Models',
+                join_paths('app', 'Models'),
+                'bootstrap',
                 'routes',
-                'resources/views',
-                'database/factories',
-                'database/migrations',
-                'database/seeders',
-            ])->map(static fn ($directory) => "{$workbenchWorkingPath}/{$directory}")
+                join_paths('resources', 'views'),
+                join_paths('database', 'factories'),
+                join_paths('database', 'migrations'),
+                join_paths('database', 'seeders'),
+            ])->map(static fn ($directory) => join_paths($workbenchWorkingPath, $directory))
         );
 
         $this->callSilently('make:provider', [
@@ -91,7 +92,7 @@ class DevToolCommand extends Command
             '--preset' => 'workbench',
         ]);
 
-        foreach (['api', 'console', 'web'] as $route) {
+        foreach (['console', 'web'] as $route) {
             (new GeneratesFile(
                 filesystem: $filesystem,
                 components: $this->components,
@@ -110,11 +111,9 @@ class DevToolCommand extends Command
     {
         $composer = (new Composer($filesystem))->setWorkingPath($workingPath);
 
-        $composer->modify(function (array $content) use ($filesystem) {
-            return $this->appendScriptsToComposer(
-                $this->appendAutoloadDevToComposer($content, $filesystem), $filesystem
-            );
-        });
+        $composer->modify(fn (array $content) => $this->appendScriptsToComposer(
+            $this->appendAutoloadDevToComposer($content, $filesystem), $filesystem
+        ));
     }
 
     /**

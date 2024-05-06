@@ -28,25 +28,25 @@
         }
     },
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "composer-runtime-api": "^2.2",
         "composer/semver": "^3.0",
-        "illuminate/console": "^10.48.4",
-        "illuminate/database": "^10.48.4",
-        "illuminate/filesystem": "^10.48.4",
-        "illuminate/support": "^10.48.4",
-        "orchestra/canvas-core": "^8.10.2",
-        "orchestra/testbench-core": "^8.19",
+        "illuminate/console": "^11.1.1",
+        "illuminate/database": "^11.1.1",
+        "illuminate/filesystem": "^11.1.1",
+        "illuminate/support": "^11.1.1",
+        "orchestra/canvas-core": "^9.0",
+        "orchestra/testbench-core": "^9.0",
         "symfony/polyfill-php83": "^1.28",
-        "symfony/yaml": "^6.2"
+        "symfony/yaml": "^7.0"
     },
     "require-dev": {
-        "laravel/framework": "^10.48.4",
+        "laravel/framework": "^11.1.1",
         "laravel/pint": "^1.6",
-        "mockery/mockery": "^1.5.1",
-        "phpstan/phpstan": "^1.10.56",
-        "phpunit/phpunit": "^10.5",
-        "spatie/laravel-ray": "^1.33"
+        "mockery/mockery": "^1.6",
+        "phpstan/phpstan": "^1.10.6",
+        "phpunit/phpunit": "^11.0",
+        "spatie/laravel-ray": "^1.35"
     },
     "config": {
         "preferred-install": {

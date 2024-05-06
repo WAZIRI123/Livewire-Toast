@@ -47,10 +47,34 @@ class InstallCommand extends Command
 
         $this->copyTestbenchConfigurationFile($filesystem, $workingPath);
         $this->copyTestbenchDotEnvFile($filesystem, $workingPath);
+        $this->prepareWorkbenchDirectories($filesystem, $workingPath);
 
         $this->call('workbench:create-sqlite-db', ['--force' => true]);
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Prepare workbench directories.
+     */
+    protected function prepareWorkbenchDirectories(Filesystem $filesystem, string $workingPath): void
+    {
+        $workbenchWorkingPath = join_paths($workingPath, 'workbench');
+
+        foreach (['app' => true, 'providers' => false] as $bootstrap => $default) {
+            if (! confirm("Generate `workbench/bootstrap/{$bootstrap}.php` file?", default: $default)) {
+                continue;
+            }
+
+            (new GeneratesFile(
+                filesystem: $filesystem,
+                components: $this->components,
+                force: (bool) $this->option('force'),
+            ))->handle(
+                (string) realpath(join_paths(__DIR__, 'stubs', 'bootstrap', "{$bootstrap}.php")),
+                join_paths($workbenchWorkingPath, 'bootstrap', "{$bootstrap}.php")
+            );
+        }
     }
 
     /**
@@ -82,7 +106,7 @@ class InstallCommand extends Command
         }
 
         $choices = Collection::make($this->environmentFiles())
-            ->reject(static fn ($file) => $filesystem->exists("{$workbenchWorkingPath}/{$file}"))
+            ->reject(static fn ($file) => $filesystem->exists(join_paths($workbenchWorkingPath, $file)))
             ->values()
             ->prepend('Skip exporting .env')
             ->all();
@@ -95,13 +119,14 @@ class InstallCommand extends Command
             return;
         }
 
+        /** @var string $choice */
         $choice = select("Export '.env' file as?", $choices);
 
         if ($choice === 'Skip exporting .env') {
             return;
         }
 
-        $to = "{$workbenchWorkingPath}/{$choice}";
+        $to = join_paths($workbenchWorkingPath, $choice);
 
         (new GeneratesFile(
             filesystem: $filesystem,

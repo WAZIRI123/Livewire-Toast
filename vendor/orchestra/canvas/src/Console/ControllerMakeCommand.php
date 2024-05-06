@@ -2,14 +2,13 @@
 
 namespace Orchestra\Canvas\Console;
 
-use Illuminate\Filesystem\Filesystem;
 use Orchestra\Canvas\Core\Concerns\CodeGenerator;
 use Orchestra\Canvas\Core\Concerns\TestGenerator;
 use Orchestra\Canvas\Core\Concerns\UsesGeneratorOverrides;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Routing/Console/ControllerMakeCommand.php
+ * @see https://github.com/laravel/framework/blob/11.x/src/Illuminate/Routing/Console/ControllerMakeCommand.php
  */
 #[AsCommand(name: 'make:controller', description: 'Create a new controller class')]
 class ControllerMakeCommand extends \Illuminate\Routing\Console\ControllerMakeCommand
@@ -19,13 +18,14 @@ class ControllerMakeCommand extends \Illuminate\Routing\Console\ControllerMakeCo
     use UsesGeneratorOverrides;
 
     /**
-     * Create a new creator command instance.
+     * Configures the current command.
      *
      * @return void
      */
-    public function __construct(Filesystem $files)
+    #[\Override]
+    protected function configure()
     {
-        parent::__construct($files);
+        parent::configure();
 
         $this->addGeneratorPresetOptions();
     }

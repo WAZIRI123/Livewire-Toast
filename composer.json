@@ -15,7 +15,7 @@
         }
     },
     "require": {
-        "orchestra/testbench": "^8.22.3",
+  
         "livewire/livewire": "^3.4.12"
     },
     "extra": {
@@ -24,5 +24,8 @@
                 "Waziri123\\LivewireToast\\LivewireToastServiceProvider"
             ]
         }
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0"
     }
 }

@@ -9,18 +9,14 @@
  */
 namespace PHPUnit\Event\Code;
 
-use PHPUnit\Event\TestData\MoreThanOneDataSetFromDataProviderException;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Logging\TestDox\NamePrettifier;
 
 /**
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestDoxBuilder
+final readonly class TestDoxBuilder
 {
-    /**
-     * @throws MoreThanOneDataSetFromDataProviderException
-     */
     public static function fromTestCase(TestCase $testCase): TestDox
     {
         $prettifier = new NamePrettifier;

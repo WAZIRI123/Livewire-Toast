@@ -19,7 +19,7 @@ class LoadConfigurationWithWorkbench extends LoadConfiguration
      *
      * @var bool
      */
-    protected $usesWorkbenchConfigFile = false;
+    protected readonly bool $usesWorkbenchConfigFile;
 
     /**
      * Construct a new bootstrap class.

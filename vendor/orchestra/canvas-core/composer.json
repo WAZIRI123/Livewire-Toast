@@ -21,31 +21,25 @@
     "autoload-dev": {
         "psr-4": {
             "Orchestra\\Canvas\\Core\\Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/",
-            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
-            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+            "Workbench\\App\\": "workbench/app/"
         }
     },
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "composer-runtime-api": "^2.2",
         "composer/semver": "^3.0",
-        "illuminate/console": "^10.38.1",
-        "illuminate/filesystem": "^10.38.1",
+        "illuminate/console": "^11.0",
+        "illuminate/filesystem": "^11.0",
         "symfony/polyfill-php83": "^1.28"
     },
     "require-dev": {
+        "laravel/framework": "^11.0",
         "laravel/pint": "^1.6",
-        "laravel/framework": "^10.38.1",
         "mockery/mockery": "^1.5.1",
-        "orchestra/testbench-core": "^8.19",
+        "orchestra/testbench-core": "^9.0",
         "phpstan/phpstan": "^1.10.6",
         "phpunit/phpunit": "^10.1",
-        "symfony/yaml": "^6.2"
-    },
-    "conflict": {
-        "orchestra/canvas": "<8.11.0",
-        "orchestra/testbench-core": "<8.2.0"
+        "symfony/yaml": "^7.0"
     },
     "config": {
         "sort-packages": true

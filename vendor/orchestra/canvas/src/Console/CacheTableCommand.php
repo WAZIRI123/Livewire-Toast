@@ -2,29 +2,26 @@
 
 namespace Orchestra\Canvas\Console;
 
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Composer;
 use Orchestra\Canvas\Core\Concerns\MigrationGenerator;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
- * @see https://github.com/laravel/framework/blob/10.x/src/Illuminate/Cache/Console/CacheTableCommand.php
+ * @see https://github.com/laravel/framework/blob/11.x/src/Illuminate/Cache/Console/CacheTableCommand.php
  */
-#[AsCommand(name: 'cache:table', description: 'Create a migration for the cache database table')]
+#[AsCommand(name: 'make:cache-table', description: 'Create a migration for the cache database table', aliases: ['cache:table'])]
 class CacheTableCommand extends \Illuminate\Cache\Console\CacheTableCommand
 {
     use MigrationGenerator;
 
     /**
-     * Create a new session table command instance.
+     * Configures the current command.
      *
-     * @param  \Illuminate\Filesystem\Filesystem  $files
-     * @param  \Illuminate\Support\Composer  $composer
      * @return void
      */
-    public function __construct(Filesystem $files, Composer $composer)
+    #[\Override]
+    protected function configure()
     {
-        parent::__construct($files, $composer);
+        parent::configure();
 
         $this->addGeneratorPresetOptions();
     }

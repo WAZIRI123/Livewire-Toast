@@ -13,7 +13,6 @@ use const PHP_EOL;
 use function assert;
 use function class_exists;
 use function defined;
-use function error_clear_last;
 use function extension_loaded;
 use function get_include_path;
 use function hrtime;
@@ -26,7 +25,6 @@ use function var_export;
 use AssertionError;
 use PHPUnit\Event;
 use PHPUnit\Event\NoPreviousThrowableException;
-use PHPUnit\Event\TestData\MoreThanOneDataSetFromDataProviderException;
 use PHPUnit\Metadata\Api\CodeCoverage as CodeCoverageMetadataApi;
 use PHPUnit\Metadata\Parser\Registry as MetadataRegistry;
 use PHPUnit\Runner\CodeCoverage;
@@ -62,18 +60,15 @@ final class TestRunner
      * @throws \PHPUnit\Runner\Exception
      * @throws CodeCoverageException
      * @throws InvalidArgumentException
-     * @throws MoreThanOneDataSetFromDataProviderException
      * @throws UnintentionallyCoveredCodeException
      */
     public function run(TestCase $test): void
     {
         Assert::resetCount();
 
-        if ($this->configuration->registerMockObjectsFromTestArgumentsRecursively()) {
-            $test->registerMockObjectsFromTestArgumentsRecursively();
-        }
+        $codeCoverageMetadataApi = new CodeCoverageMetadataApi;
 
-        $shouldCodeCoverageBeCollected = (new CodeCoverageMetadataApi)->shouldCodeCoverageBeCollectedFor(
+        $shouldCodeCoverageBeCollected = $codeCoverageMetadataApi->shouldCodeCoverageBeCollectedFor(
             $test::class,
             $test->name(),
         );
@@ -83,8 +78,6 @@ final class TestRunner
         $incomplete = false;
         $risky      = false;
         $skipped    = false;
-
-        error_clear_last();
 
         if ($this->shouldErrorHandlerBeUsed($test)) {
             ErrorHandler::instance()->enable();
@@ -159,12 +152,12 @@ final class TestRunner
 
             if ($append) {
                 try {
-                    $linesToBeCovered = (new CodeCoverageMetadataApi)->linesToBeCovered(
+                    $linesToBeCovered = $codeCoverageMetadataApi->linesToBeCovered(
                         $test::class,
                         $test->name(),
                     );
 
-                    $linesToBeUsed = (new CodeCoverageMetadataApi)->linesToBeUsed(
+                    $linesToBeUsed = $codeCoverageMetadataApi->linesToBeUsed(
                         $test::class,
                         $test->name(),
                     );
@@ -251,7 +244,6 @@ final class TestRunner
      * @throws \PHPUnit\Util\Exception
      * @throws \SebastianBergmann\Template\InvalidArgumentException
      * @throws Exception
-     * @throws MoreThanOneDataSetFromDataProviderException
      * @throws NoPreviousThrowableException
      * @throws ProcessIsolationException
      * @throws StaticAnalysisCacheNotConfiguredException
@@ -287,7 +279,6 @@ final class TestRunner
             $iniSettings   = GlobalState::getIniSettingsAsString();
         }
 
-        $exportObjects    = Event\Facade::emitter()->exportsObjects() ? 'true' : 'false';
         $coverage         = CodeCoverage::instance()->isActive() ? 'true' : 'false';
         $linesToBeIgnored = var_export(CodeCoverage::instance()->linesToBeIgnored(), true);
 
@@ -338,7 +329,6 @@ final class TestRunner
             'offsetNanoseconds'              => $offset[1],
             'serializedConfiguration'        => $serializedConfiguration,
             'processResultFile'              => $processResultFile,
-            'exportObjects'                  => $exportObjects,
         ];
 
         if (!$runEntireClass) {
@@ -365,6 +355,10 @@ final class TestRunner
             }
 
             if ($metadata->isCoversClass()) {
+                return true;
+            }
+
+            if ($metadata->isCoversMethod()) {
                 return true;
             }
 

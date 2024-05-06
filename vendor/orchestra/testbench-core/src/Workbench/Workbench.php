@@ -3,14 +3,18 @@
 namespace Orchestra\Testbench\Workbench;
 
 use Illuminate\Contracts\Foundation\Application as ApplicationContract;
+use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\View;
 use Orchestra\Testbench\Contracts\Config as ConfigContract;
 use Orchestra\Testbench\Foundation\Config;
 use Orchestra\Testbench\Foundation\Env;
 use Orchestra\Workbench\WorkbenchServiceProvider;
 
 use function Orchestra\Testbench\after_resolving;
+use function Orchestra\Testbench\package_path;
 use function Orchestra\Testbench\workbench_path;
 
 /**
@@ -25,14 +29,14 @@ class Workbench
      *
      * @var \Orchestra\Testbench\Contracts\Config|null
      */
-    protected static $cachedConfiguration;
+    protected static ?ConfigContract $cachedConfiguration = null;
 
     /**
      * The cached core workbench bindings.
      *
      * @var array{kernel: array{console?: string|null, http?: string|null}, handler: array{exception?: string|null}}
      */
-    public static $cachedCoreBindings = [
+    public static array $cachedCoreBindings = [
         'kernel' => [],
         'handler' => [],
     ];
@@ -77,13 +81,29 @@ class Workbench
         /** @var TWorkbenchDiscoversConfig $discoversConfig */
         $discoversConfig = $config->getWorkbenchDiscoversAttributes();
 
-        $app->booted(static function ($app) use ($discoversConfig) {
-            tap($app->make('router'), static function (Router $router) use ($discoversConfig) {
-                foreach (['web', 'api'] as $group) {
-                    if (($discoversConfig[$group] ?? false) === true) {
-                        if (file_exists($route = workbench_path(['routes', "{$group}.php"]))) {
-                            $router->middleware($group)->group($route);
-                        }
+        $healthCheckEnabled = $config->getWorkbenchAttributes()['health'] ?? false;
+
+        $app->booted(static function ($app) use ($discoversConfig, $healthCheckEnabled) {
+            tap($app->make('router'), static function (Router $router) use ($discoversConfig, $healthCheckEnabled) {
+                if (($discoversConfig['api'] ?? false) === true) {
+                    if (file_exists($route = workbench_path(['routes', 'api.php']))) {
+                        $router->middleware('api')->group($route);
+                    }
+                }
+
+                if ($healthCheckEnabled === true) {
+                    $router->middleware('web')->get('/up', function () {
+                        Event::dispatch(new DiagnosingHealth);
+
+                        return View::file(
+                            package_path(['vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'health-up.blade.php'])
+                        );
+                    });
+                }
+
+                if (($discoversConfig['web'] ?? false) === true) {
+                    if (file_exists($route = workbench_path(['routes', 'web.php']))) {
+                        $router->middleware('web')->group($route);
                     }
                 }
             });

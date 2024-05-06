@@ -2,11 +2,10 @@
 
 namespace Orchestra\Canvas\Console;
 
-use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Support\Collection;
-use Orchestra\Canvas\CanvasServiceProvider;
+use Orchestra\Canvas\Core\Concerns\CreatesUsingGeneratorPreset;
 use Orchestra\Canvas\LaravelServiceProvider;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 
@@ -17,20 +16,17 @@ class Commander extends \Orchestra\Testbench\Console\Commander
      *
      * @var string
      */
-    protected $environmentFile = '.env';
+    protected string $environmentFile = '.env';
 
     /**
-     * Resolve application implementation.
+     * List of providers.
      *
-     * @return \Closure(\Illuminate\Foundation\Application):void
+     * @var array<int, class-string<\Illuminate\Support\ServiceProvider>>
      */
-    #[\Override]
-    protected function resolveApplicationCallback()
-    {
-        return static function ($app) {
-            $app->register(CanvasServiceProvider::class);
-        };
-    }
+    protected array $providers = [
+        \Orchestra\Canvas\Core\LaravelServiceProvider::class,
+        \Orchestra\Canvas\CanvasServiceProvider::class,
+    ];
 
     /**
      * Create Laravel application.
@@ -49,10 +45,9 @@ class Commander extends \Orchestra\Testbench\Console\Commander
             $app->register(LaravelServiceProvider::class);
 
             Collection::make($kernel->all())
-                ->reject(static function (SymfonyCommand $command, string $name) {
-                    return $command instanceof GeneratorCommand
-                        || $command instanceof MigrateMakeCommand;
-                })->each(static function (SymfonyCommand $command) {
+                ->reject(
+                    static fn (SymfonyCommand $command, string $name) => \in_array(CreatesUsingGeneratorPreset::class, class_uses_recursive($command))
+                )->each(static function (SymfonyCommand $command) {
                     $command->setHidden(true);
                 });
         }
