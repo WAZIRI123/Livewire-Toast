@@ -15,8 +15,8 @@
         }
     },
     "require": {
-        "orchestra/testbench": "^8.14",
-        "livewire/livewire": "^3.0"
+        "orchestra/testbench": "^8.22.3",
+        "livewire/livewire": "^3.4.12"
     },
     "extra": {
         "laravel": {

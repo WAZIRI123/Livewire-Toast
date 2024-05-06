@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => 'dd99def467bdecd447401a833b4a9085e568e707',
+        'reference' => '86c3a5191337fa311f3cdfac89b731f1d9ce24eb',
         'name' => 'waziri123/waziri-livewire-toast',
         'dev' => true,
     ),
@@ -751,8 +751,8 @@
         'psr/log-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0|2.0|3.0',
-                1 => '3.0.0',
+                0 => '3.0.0',
+                1 => '1.0|2.0|3.0',
             ),
         ),
         'psr/simple-cache' => array(
@@ -1325,7 +1325,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => 'dd99def467bdecd447401a833b4a9085e568e707',
+            'reference' => '86c3a5191337fa311f3cdfac89b731f1d9ce24eb',
             'dev_requirement' => false,
         ),
         'webmozart/assert' => array(
