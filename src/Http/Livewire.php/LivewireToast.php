@@ -1,6 +1,6 @@
 <?php
 
-namespace Waziri123\Http\Livewire\LivewireToast;
+namespace Waziri123\LivewireToast\Http\Livewire;
 
 use Livewire\Component;
 
