@@ -3,7 +3,7 @@
 namespace Waziri123\LivewireToast;
 
 use Illuminate\Support\ServiceProvider;
-use Waziri123\LivewireToast\Http\Livewire\LivewireToast;
+use Waziri123\WaziriLivewireToast\Http\Livewire\LivewireToast;
 use Livewire\Livewire;
 
 class LivewireToastServicesProvider extends ServiceProvider
