@@ -21,7 +21,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Waziri123\\LivewireToast\\LivewireToastServicesProvider"
+                "Waziri123\\LivewireToastServicesProvider"
             ]
         }
     },
