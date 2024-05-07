@@ -1,9 +1,9 @@
 <?php
 
-namespace Waziri123\LivewireToast;
+namespace Waziri123\LivewireToastServicesProvider;
 
 use Illuminate\Support\ServiceProvider;
-use Waziri123\LivewireToast;
+use Waziri123\Http\Livewire\LivewireToast;
 use Livewire\Livewire;
 
 class LivewireToastServicesProvider extends ServiceProvider
