@@ -6,7 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Waziri123\WaziriLivewireToast\Http\Livewire\LivewireToast;
 use Livewire\Livewire;
 
-class LivewireToastServicesProvider extends ServiceProvider
+class LivewireToastServiceProvider extends ServiceProvider
 {
     public function boot()
     {
