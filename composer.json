@@ -11,7 +11,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Waziri123\\LivewireToast\\" : "src/"
+            "Waziri123\\WaziriLivewireToast\\" : "src/"
         }
     },
     "require": {
@@ -21,7 +21,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Waziri123\\LivewireToast\\LivewireToastServiceProvider"
+                "Waziri123\\WaziriLivewireToast\\LivewireToastServiceProvider"
             ]
         }
     },

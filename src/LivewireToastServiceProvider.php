@@ -1,6 +1,6 @@
 <?php
 
-namespace Waziri123\LivewireToast;
+namespace Waziri123\WaziriLivewireToast;
 
 use Illuminate\Support\ServiceProvider;
 use Waziri123\WaziriLivewireToast\Http\Livewire\LivewireToast;
