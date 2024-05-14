@@ -2,6 +2,7 @@
 
 namespace Waziri123\WaziriLivewireToast\Http\Livewire;
 
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class LivewireToast extends Component
@@ -33,7 +34,7 @@ class LivewireToast extends Component
             $this->show($message);
         }
     }
-
+    #[On('show')]
     public function show($params)
     {
         $type = '';
@@ -45,25 +46,28 @@ class LivewireToast extends Component
         }
         $this->_setType($type);
     }
-
+    #[On('showWarning')]
     public function showWarning($message)
     {
         $this->message = $message;
         $this->_setType('warning');
     }
 
+    #[On('showInfo')]
     public function showInfo($message)
     {
         $this->message = $message;
         $this->_setType('info');
     }
 
+    #[On('showError')]
     public function showError($message)
     {
         $this->message = $message;
         $this->_setType('error');
     }
 
+    #[On('showSuccess')]
     public function showSuccess($message)
     {
         $this->message = $message;
@@ -86,7 +90,7 @@ class LivewireToast extends Component
         return view('livewire-toast::livewire.livewire-toast');
     }
 
-    private function _setType($type = '')
+    public function _setType($type = '')
     {
         if (in_array($type, ['warning', 'info', 'error', 'success'])) {
             $this->type = $type;

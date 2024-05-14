@@ -57,8 +57,12 @@ class ComposerStaticInit23a18a6d13a892c1c51f1c04a8596be0
         ),
         'W' => 
         array (
+            'Workbench\\Database\\Seeders\\' => 27,
+            'Workbench\\Database\\Factories\\' => 29,
+            'Workbench\\App\\' => 14,
             'Webmozart\\Assert\\' => 17,
-            'Waziri123\\LivewireToast\\' => 24,
+            'Waziri123\\WaziriLivewireToast\\Tests\\' => 36,
+            'Waziri123\\WaziriLivewireToast\\' => 30,
         ),
         'T' => 
         array (
@@ -101,6 +105,7 @@ class ComposerStaticInit23a18a6d13a892c1c51f1c04a8596be0
             'Spatie\\Ray\\' => 11,
             'Spatie\\Macroable\\' => 17,
             'Spatie\\LaravelRay\\' => 18,
+            'Spatie\\LaravelPackageTools\\' => 27,
             'Spatie\\Backtrace\\' => 17,
         ),
         'R' => 
@@ -179,6 +184,7 @@ class ComposerStaticInit23a18a6d13a892c1c51f1c04a8596be0
         array (
             'Cron\\' => 5,
             'Composer\\Semver\\' => 16,
+            'Christophrumpel\\MissingLivewireAssertions\\' => 42,
             'Carbon\\Doctrine\\' => 16,
             'Carbon\\' => 7,
         ),
@@ -205,11 +211,27 @@ class ComposerStaticInit23a18a6d13a892c1c51f1c04a8596be0
         array (
             0 => __DIR__ . '/..' . '/zbateson/mail-mime-parser/src',
         ),
+        'Workbench\\Database\\Seeders\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/workbench/database/seeders',
+        ),
+        'Workbench\\Database\\Factories\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/workbench/database/factories',
+        ),
+        'Workbench\\App\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/workbench/app',
+        ),
         'Webmozart\\Assert\\' => 
         array (
             0 => __DIR__ . '/..' . '/webmozart/assert/src',
         ),
-        'Waziri123\\LivewireToast\\' => 
+        'Waziri123\\WaziriLivewireToast\\Tests\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/tests',
+        ),
+        'Waziri123\\WaziriLivewireToast\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
@@ -356,6 +378,10 @@ class ComposerStaticInit23a18a6d13a892c1c51f1c04a8596be0
         'Spatie\\LaravelRay\\' => 
         array (
             0 => __DIR__ . '/..' . '/spatie/laravel-ray/src',
+        ),
+        'Spatie\\LaravelPackageTools\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/spatie/laravel-package-tools/src',
         ),
         'Spatie\\Backtrace\\' => 
         array (
@@ -539,6 +565,10 @@ class ComposerStaticInit23a18a6d13a892c1c51f1c04a8596be0
         'Composer\\Semver\\' => 
         array (
             0 => __DIR__ . '/..' . '/composer/semver/src',
+        ),
+        'Christophrumpel\\MissingLivewireAssertions\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/christophrumpel/missing-livewire-assertions/src',
         ),
         'Carbon\\Doctrine\\' => 
         array (

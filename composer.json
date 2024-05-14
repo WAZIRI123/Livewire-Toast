@@ -2,7 +2,13 @@
     "name": "waziri123/waziri-livewire-toast",
     "description": "Livewire Package to display Toast Notifications",
     "license": "MIT",
-    "keywords": ["Laravel", "LivewireToast", "Toast", "Notifications", "Livewire"],
+    "keywords": [
+        "Laravel",
+        "LivewireToast",
+        "Toast",
+        "Notifications",
+        "Livewire"
+    ],
     "authors": [
         {
             "name": "Waziri123",
@@ -11,12 +17,39 @@
     ],
     "autoload": {
         "psr-4": {
-            "Waziri123\\WaziriLivewireToast\\" : "src/"
+            "Waziri123\\WaziriLivewireToast\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Waziri123\\WaziriLivewireToast\\Tests\\": "tests",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve"
+        ],
+        "lint": [
+            "@php vendor/bin/phpstan analyse"
+        ]
+    },
     "require": {
-  
-        "livewire/livewire": "^3.4.12"
+        "livewire/livewire": "^3.4.12",
+        "christophrumpel/missing-livewire-assertions": "^2.8"
     },
     "extra": {
         "laravel": {
