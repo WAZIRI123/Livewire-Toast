@@ -46,7 +46,7 @@ session()->flash('livewire-toast', ['type' => 'error', 'message' => 'There was a
 
 *From Livewire View*
 ```php
-$emitTo('livewire-toast', 'show', 'Project Added Successfully'); //Will show Success Message
+wire:click="$dispatchTo('livewire-toast', 'showWarning', {params: 'Project Added Successfully' })" //Will show Success Message
 $emitTo('livewire-toast', 'showError', 'There was an Error!'); //Will show error. showError, showWarning, showInfo, showSuccess are supported
 $emitTo('livewire-toast', 'show', {'type' : 'warning', 'message' : 'This is warning!'}); //Can also pass type and message as object
 ```
