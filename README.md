@@ -30,34 +30,16 @@ You can then call the Livewire Toast as below:
 *From Livewire Component*
 
 ```php
-$this->emitTo('livewire-toast', 'show', 'Project Added Successfully'); //Will show Success Message
-$this->emitTo('livewire-toast', 'showError', 'There was an Error!'); //Will show error. showError, showWarning, showInfo, showSuccess are supported
-$this->emitTo('livewire-toast', 'show', ['type' => 'warning', 'message' => 'This is warning!']); //Can also pass type and message as array
-
-```
-
-*Using Session Flash*
-
-```php
-session()->flash('livewire-toast', 'Project Added Successfully');
-session()->flash('livewire-toast', ['type' => 'error', 'message' => 'There was an Error!']);
-
+$this->dispatch('showWarning', 'Record deleted Successfully')->to('livewire-toast'); //Will show Success Message
+$this->dispatch('showError', 'There was an Error!')->to('livewire-toast');   //Will show error. showError, showWarning, showInfo, showSuccess are supported
 ```
 
 *From Livewire View*
 ```php
-wire:click="$dispatchTo('livewire-toast', 'showWarning', {params: 'Project Added Successfully' })" //Will show Success Message
-$emitTo('livewire-toast', 'showError', 'There was an Error!'); //Will show error. showError, showWarning, showInfo, showSuccess are supported
-$emitTo('livewire-toast', 'show', {'type' : 'warning', 'message' : 'This is warning!'}); //Can also pass type and message as object
-```
+wire:click="$dispatchTo('livewire-toast', 'show', {params: 'Project Added Successfully' })" //Will show Success Message
+wire:click="$dispatchTo('livewire-toast', 'showError', {message: 'There was an Error!' })" //Will show error. showError, showWarning, showInfo, showSuccess are supported
 
-*From JS*
-```js
-Livewire.emitTo('livewire-toast', 'show', 'Project Added Successfully'); //Will show Success Message
-Livewire.emitTo('livewire-toast', 'showError', 'There was an Error!'); //Will show error. showError, showWarning, showInfo, showSuccess are supported
-Livewire.emitTo('livewire-toast', 'show', {'type' : 'warning', 'message' : 'This is warning!'}); //Can also pass type and message as object
 ```
-
 
 ## Configurations
 
